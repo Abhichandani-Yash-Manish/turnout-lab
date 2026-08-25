@@ -174,7 +174,7 @@ def render_result(result: PredictionResult) -> None:
             <div class="ticket">
               <div class="tl-eyebrow">Attendance estimate</div>
               <div class="probability">{percent(result.attendance_probability, 0)}</div>
-              <div class="probability-label">calibrated attendance probability</div>
+              <div class="probability-label">likely to attend · calibrated probability</div>
               <div class="runway">
                 <div class="runway-fill" style="width:{result.attendance_probability * 100:.2f}%"></div>
                 <div class="runway-marker" style="left:{result.decision_threshold * 100:.2f}%"></div>
@@ -326,7 +326,8 @@ with predict_tab:
             result = predictor.predict(attendance_input)
             st.session_state["latest_result"] = result
             st.session_state["latest_input"] = attendance_input
-            log_prediction(DATABASE_PATH, result)
+            if not log_prediction(DATABASE_PATH, result):
+                st.warning("Prediction completed, but the anonymous activity log is temporarily unavailable.")
         except ValidationError as error:
             st.error(error.errors()[0]["msg"])
     if "latest_result" in st.session_state:
@@ -362,8 +363,14 @@ with batch_tab:
                 st.session_state["batch_outputs"] = outputs
                 batch_summary = summarize_batch(outputs, predictor.bundle["model_version"])
                 st.session_state["batch_summary"] = batch_summary
-                log_batch(DATABASE_PATH, predictor.bundle["model_version"], batch_summary)
-                log_batch_predictions(DATABASE_PATH, outputs)
+                batch_logged = log_batch(
+                    DATABASE_PATH, predictor.bundle["model_version"], batch_summary
+                )
+                predictions_logged = log_batch_predictions(DATABASE_PATH, outputs)
+                if not batch_logged or not predictions_logged:
+                    st.warning(
+                        "Batch scoring completed, but the anonymous activity log is temporarily unavailable."
+                    )
             except ValueError as error:
                 st.error(str(error))
     if "batch_outputs" in st.session_state:
@@ -390,15 +397,22 @@ with batch_tab:
             "They support aggregate planning; they are not guaranteed attendance counts.</div>",
             unsafe_allow_html=True,
         )
+        display = outputs.copy()
+        display["likely_to_attend"] = display["attendance_probability"].map(
+            lambda value: "—" if pd.isna(value) else f"{value * 100:.0f}%"
+        )
         display_columns = [
             "student_id",
-            "attendance_probability",
+            "likely_to_attend",
             "no_show_risk_band",
             "reliability",
             "status",
             "error",
         ]
-        st.dataframe(outputs[display_columns].head(100), width="stretch", hide_index=True)
+        st.dataframe(display[display_columns].head(100), width="stretch", hide_index=True)
+        st.caption(
+            "The downloadable CSV keeps full-precision probabilities; this table rounds them for reading."
+        )
         st.download_button(
             "Download scored CSV",
             data=outputs.to_csv(index=False).encode("utf-8"),
@@ -738,6 +752,11 @@ with data_tab:
 
     st.markdown("#### Anonymous local operations")
     operations = operations_summary(DATABASE_PATH)
+    if not operations["available"]:
+        st.warning(
+            "Anonymous operations analytics are temporarily unavailable. "
+            "Prediction and batch scoring remain fully functional."
+        )
     operation_cards = st.columns(4)
     prediction_total = int(operations["predictions"]["total"] or 0)
     average_probability = operations["predictions"]["average_probability"]

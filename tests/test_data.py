@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import hashlib
+import json
+
 import numpy as np
 
-from turnout_lab.config import RAW_FEATURE_COLUMNS, TEST_PATH, TRAIN_PATH
+from turnout_lab.config import PROVENANCE_PATH, RAW_FEATURE_COLUMNS, TEST_PATH, TRAIN_PATH
 from turnout_lab.data import feature_fingerprint, prepare_datasets
 from turnout_lab.modeling import group_splits
 
@@ -55,3 +58,10 @@ def test_feature_contract_has_finite_numeric_ranges() -> None:
         assert bounds["min"] <= bounds["max"]
         assert np.isfinite([bounds["min"], bounds["max"], bounds["p01"], bounds["p99"]]).all()
 
+
+def test_raw_snapshots_match_committed_provenance() -> None:
+    provenance = json.loads(PROVENANCE_PATH.read_text(encoding="utf-8"))
+
+    for path in (TRAIN_PATH, TEST_PATH):
+        expected = provenance["files"][path.name]
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == expected["sha256"]

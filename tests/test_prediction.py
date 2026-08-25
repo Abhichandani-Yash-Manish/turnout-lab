@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 from pydantic import ValidationError
 
-from turnout_lab.config import METRICS_PATH, MODEL_PATH, TEST_PATH
+from turnout_lab.config import METRICS_PATH, MODEL_PATH, PREDICTIONS_PATH, TEST_PATH
 from turnout_lab.prediction import AttendancePredictor, summarize_batch
 from turnout_lab.schemas import AttendanceInput
 
@@ -75,6 +75,21 @@ def test_official_test_scores_exactly_100_rows(predictor: AttendancePredictor) -
     assert outputs["status"].eq("scored").all()
     assert outputs["error"].eq("").all()
     assert outputs["attendance_probability"].between(0, 1).all()
+
+
+def test_committed_official_predictions_preserve_order_and_probability_contract() -> None:
+    official = pd.read_csv(TEST_PATH)
+    committed = pd.read_csv(PREDICTIONS_PATH)
+
+    assert committed["input_row"].tolist() == list(range(100))
+    assert committed["student_id"].tolist() == official["student_id"].tolist()
+    assert committed["student_id"].nunique() == 100
+    assert committed["status"].eq("scored").all()
+    assert committed["attendance_probability"].between(0, 1).all()
+    assert committed["no_show_probability"].between(0, 1).all()
+    assert (
+        committed["attendance_probability"] + committed["no_show_probability"]
+    ).to_numpy() == pytest.approx(1)
 
 
 def test_batch_summary_reconciles_and_excludes_rejected_rows(

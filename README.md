@@ -23,21 +23,19 @@ The main technical finding was not a model result. It was a data-integrity probl
 
 ## Official task compliance
 
-| Official requirement | Turnout Lab evidence |
+| Task requirement | Turnout Lab evidence |
 |---|---|
-| Clean missing and inconsistent values | Versioned audit, documented treatments, reusable preprocessing pipeline, executed notebook |
-| Convert categorical data | Fold-local imputation and one-hot encoding with unknown-category handling |
-| Train a classification model | Prevalence baseline, logistic regression, random forest, and gradient boosting across raw/engineered representations |
-| Evaluate Precision, Recall, and F1 | Both classes plus macro-F1, balanced accuracy, ranking, calibration, and stability metrics |
-| Predict new registrations | Single form, CSV batch scorer, and CLI |
-| Return percentage likelihood | Sigmoid-calibrated attendance and no-show probabilities |
-| Identify useful insights | Three sample-sized findings with bootstrap 95% intervals |
-| Push understandable, runnable code | Pinned environment, reusable package, tests, clean-clone rehearsal, and GitHub Actions |
-| Explain approach and results | README, model card, executed notebook, walkthrough, and viva guide |
-| Demonstrate through Streamlit | Five-view local application with prediction, batch, scenario, evidence, and operations workflows |
-| Record a detailed demo | Timed 7–9 minute script and release checklist; final video link remains the submission step |
+| Clean the dataset and handle missing or inconsistent values | Versioned audit, documented treatments, reusable preprocessing pipeline, executed notebook |
+| Perform preprocessing and convert categorical data into a suitable format | Fold-local imputation and one-hot encoding with unknown-category handling |
+| Train a classification model to predict whether a student will attend | Prevalence baseline, logistic regression, random forest, and gradient boosting across raw/engineered representations |
+| Evaluate using Precision, Recall, and F1-score | Both classes plus macro-F1, balanced accuracy, ranking, calibration, and stability metrics |
+| Use the trained model to predict attendance for new registrations | Single form, CSV batch scorer, and CLI |
+| Output `Student A → 87% likely to attend` | Sigmoid-calibrated percentage on the Predict view and in every batch result row |
+| *(Optional)* Identify 2–3 useful insights | Three sample-sized findings with bootstrap 95% intervals |
 
-The task description mentions technical/non-technical status as an example, but the supplied files do not contain a separate field for it. Turnout Lab uses the actual `event_type` values and does not invent an unsupported mapping.
+### A note on the "technical or non-technical" field
+
+The task description lists this as a dataset column, but **neither supplied sheet contains it**. The closest field is `event_type`, whose five values are `Workshop`, `Talk`, `Hackathon`, `Competition`, and `Social`. Any technical/non-technical split would be an assumption layered on top of those categories, so Turnout Lab models `event_type` directly and reports this absence rather than inventing an unsupported mapping. The distinction is still available to organizers through the per-category attendance table in the Data & operations view.
 
 ## Architecture
 
@@ -218,7 +216,7 @@ data/raw/                      Versioned source snapshots and provenance
 artifacts/                     Model, metrics, feature contract, audit, predictions
 notebooks/                     Executed inspection notebook
 tests/                         Deterministic automated checks
-docs/                          Model card, audit report, screenshots, demo script
+docs/                          Model card, data-quality report, walkthrough, deployment runbook
 scripts/                       Snapshot and notebook builders
 runtime/                       Ignored local SQLite state
 ```
@@ -229,22 +227,16 @@ Turnout Lab is a planning and supportive-outreach prototype. It must not be used
 
 The source sheets are a challenge snapshot retrieved on 25 August 2026. Their URLs and exact hashes are recorded in [`data/raw/provenance.json`](data/raw/provenance.json).
 
-## Privacy and AI-assistance disclosure
+## Privacy
 
-The app stores only timestamp, source, model version, probability, risk band, reliability, and warning codes. It does not persist student IDs or raw registration values.
-
-AI assistance was used during software development, review, and documentation. The author made and verified the data-leakage decision, modeling protocol, metric interpretation, tests, and final product behavior. No LLM or external AI API is used at runtime; predictions are deterministic classical-ML outputs from the saved pipeline.
+The app stores only timestamp, source, model version, probability, risk band, reliability, and warning codes. It does not persist student IDs or raw registration values. No LLM or external AI API is used at runtime; predictions are deterministic classical-ML outputs from the saved pipeline.
 
 ## Demo
 
-The recording plan is in [docs/demo_script.md](docs/demo_script.md).
-
-Explanation and release companions:
-
-- [Project walkthrough](docs/project_walkthrough.md) — the full decision chain and 30-second, 2-minute, and 5-minute explanations.
-- [Viva questions](docs/viva_questions.md) — evaluator questions with concise, defensible answers.
-- [Submission checklist](docs/submission_checklist.md) — requirement mapping, verification, video, and access gates.
-
 **Demo video:** add the evaluator-accessible Google Drive link before submission.
 
-The repository can remain private during development. Before submitting, make it public or add the evaluators as collaborators, then verify both repository and video links in a signed-out browser.
+For the full decision chain and short/long verbal explanations, see the [project walkthrough](docs/project_walkthrough.md).
+
+---
+
+<sub>Built by Yash Abhichandani. AI coding assistance was used during development and documentation; the data-leakage finding, modeling protocol, metric interpretation, and final product behavior were authored and verified by me.</sub>
