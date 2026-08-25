@@ -47,7 +47,9 @@ This is the final operational checklist. Do not submit until every evaluator-acc
 Run from the repository root:
 
 ```bash
-uv sync --locked --extra dev
+uv sync --locked
+uv run python scripts/smoke_deployment.py
+uv sync --locked --extra dev --extra notebook
 uv run ruff check app.py src scripts tests
 uv run pytest
 uv run python scripts/build_notebook.py
@@ -65,6 +67,9 @@ Confirm manually:
 - [ ] Model Card renders comparison, threshold, confusion, stability, calibration, and importance.
 - [ ] Data & Operations shows audit evidence, insights, and anonymous log totals.
 - [ ] No browser or server-console errors occur.
+- [ ] Streamlit deployment uses `main`, `app.py`, Python 3.12, and no secrets.
+- [ ] Hosted Predict, Batch score, Scenario lab, Model card, and Data & operations journeys pass.
+- [ ] Deployed app is public or evaluator viewer access is confirmed.
 
 ## Demo sequence
 
@@ -91,6 +96,8 @@ Confirm manually:
 7. Verify the Drive video plays without requesting access.
 8. Copy the exact final links into the submission form.
 9. Reopen both submitted links from the form confirmation if available.
+
+The detailed deployment, hosted smoke, access, and rollback procedure is in [`docs/deployment.md`](deployment.md).
 
 ## Final teach-back gate
 

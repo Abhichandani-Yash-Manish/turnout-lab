@@ -139,7 +139,7 @@ Python 3.12 is the verified environment; package metadata supports Python 3.10â€
 ```bash
 git clone https://github.com/Abhichandani-Yash-Manish/turnout-lab.git
 cd turnout-lab
-uv sync --locked --extra dev
+uv sync --locked --extra dev --extra notebook
 uv run streamlit run app.py
 ```
 
@@ -149,11 +149,36 @@ uv run streamlit run app.py
 python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-pip install -e ".[dev]"
+pip install -e ".[dev,notebook]"
 streamlit run app.py
 ```
 
 No API key, hosted model, or external runtime service is required.
+
+## Deploy on Streamlit Community Cloud
+
+The repository is deployment-ready for Streamlit Community Cloud. Its root `uv.lock` is the single dependency source used by the platform; notebook and development tools are optional extras, so the hosted app installs only runtime packages.
+
+Use these locked settings at [share.streamlit.io](https://share.streamlit.io):
+
+| Setting | Value |
+|---|---|
+| Repository | `Abhichandani-Yash-Manish/turnout-lab` |
+| Branch | `main` |
+| Entry point | `app.py` |
+| Python | `3.12` |
+| Secrets | None |
+
+The repository may stay private while testing if Streamlit is authorized to access private repositories. Before evaluator submission, make both the GitHub repository and the Streamlit app evaluator-accessible and verify both links in a signed-out browser.
+
+Run the same runtime-only deployment check locally or in CI:
+
+```bash
+uv sync --locked
+uv run python scripts/smoke_deployment.py
+```
+
+The Community Cloud filesystem is suitable for this demonstration, but runtime SQLite logs are not promised to survive app restarts. They remain intentionally anonymous and are not part of model inference. See [the deployment and release runbook](docs/deployment.md) for the exact procedure and rollback checks.
 
 ## Reproduce the audit and model
 
