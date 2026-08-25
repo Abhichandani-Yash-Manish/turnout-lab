@@ -107,13 +107,24 @@ st.markdown(
         font: 650 .62rem ui-monospace, monospace; color: var(--coral);
     }}
     .runway-labels {{ display: flex; justify-content: space-between; color: var(--slate); font-size: .72rem; }}
+    .ticket-verdict {{
+        margin-top: 1.15rem; padding-top: .95rem; border-top: 1px solid var(--mist);
+        font: 700 1.15rem/1.2 "Avenir Next", "Trebuchet MS", sans-serif; color: var(--ink);
+    }}
+    .ticket-foot {{ color: var(--slate); font-size: .82rem; margin-top: .45rem; }}
     .pill {{
         display: inline-block; padding: .28rem .62rem; margin: .25rem .3rem .2rem 0;
         border-radius: 999px; font: 700 .72rem ui-monospace, monospace; text-transform: uppercase;
     }}
-    .pill-low {{ background: #E8F2FF; color: #244BA9; }}
-    .pill-medium {{ background: #FFF2D2; color: #815A00; }}
-    .pill-high {{ background: #FFE5E2; color: #A72F27; }}
+    /* Risk and reliability both read low/medium/high but mean opposite things:
+       high risk is bad news, high reliability is good news. Separate scales stop
+       "high reliability" from rendering as an alarm. */
+    .pill-risk-low {{ background: #E3F5EC; color: #1C6B47; }}
+    .pill-risk-medium {{ background: #FFF2D2; color: #815A00; }}
+    .pill-risk-high {{ background: #FFE5E2; color: #A72F27; }}
+    .pill-trust-high {{ background: #E3F5EC; color: #1C6B47; }}
+    .pill-trust-medium {{ background: #FFF2D2; color: #815A00; }}
+    .pill-trust-low {{ background: #FFE5E2; color: #A72F27; }}
     .note {{
         border-left: 4px solid var(--gold); background: #FFF9E9; padding: .75rem .9rem;
         color: #5F4A17; border-radius: 0 8px 8px 0; margin: .7rem 0;
@@ -171,10 +182,17 @@ def clean_chart(
     return figure
 
 
+CHART_CONFIG = {"displayModeBar": False, "staticPlot": False}
+
+
 def render_result(result: PredictionResult) -> None:
     risk = result.no_show_risk_band.value
-    left, right = st.columns([1.15, 1])
+    reliability = result.reliability.value
+    verdict = "Likely to attend" if result.predicted_attendance else "Prioritize a reminder"
+    left, right = st.columns([1.05, 1], gap="large")
     with left:
+        # Verdict, pills, and the complement all live inside the card so the estimate
+        # reads as one object instead of scattering across two sparse columns.
         st.markdown(
             f"""
             <div class="ticket">
@@ -186,32 +204,29 @@ def render_result(result: PredictionResult) -> None:
                 <div class="runway-marker" style="left:{result.decision_threshold * 100:.2f}%"></div>
               </div>
               <div class="runway-labels"><span>0% attendance</span><span>100% attendance</span></div>
+              <div class="ticket-verdict">{verdict}</div>
+              <div>
+                <span class="pill pill-risk-{risk}">{risk} no-show risk</span>
+                <span class="pill pill-trust-{reliability}">{reliability} reliability</span>
+              </div>
+              <div class="ticket-foot">No-show probability {percent(result.no_show_probability)}
+                · decision threshold {percent(result.decision_threshold, 0)}</div>
             </div>
             """,
             unsafe_allow_html=True,
         )
-    with right:
-        verdict = "Likely to attend" if result.predicted_attendance else "Prioritize a reminder"
-        st.subheader(verdict)
-        st.markdown(
-            f'<span class="pill pill-{risk}">{risk} no-show risk</span>'
-            f'<span class="pill pill-{result.reliability.value}">{result.reliability.value} reliability</span>',
-            unsafe_allow_html=True,
-        )
-        st.write(f"No-show probability: **{percent(result.no_show_probability)}**")
         if result.status.value == "review_required":
             st.warning("Treat this score as a review prompt: at least one input is outside the development contract.")
-
-    st.markdown("#### Factors associated with this score")
-    if result.reason_codes:
-        for reason in result.reason_codes:
-            st.markdown(f"- {reason}")
-    else:
-        st.caption("No single field moved the estimate by at least one percentage point from the reference profile.")
-    if result.warnings:
-        for warning in result.warnings:
-            st.warning(warning)
-    st.caption("These are one-field-at-a-time scenario deltas, not causal explanations.")
+    with right:
+        st.markdown("##### Factors associated with this score")
+        if result.reason_codes:
+            for reason in result.reason_codes:
+                st.markdown(f"- {reason}")
+        else:
+            st.caption("No single field moved the estimate by at least one percentage point from the reference profile.")
+        st.caption("One-field-at-a-time scenario deltas, not causal explanations.")
+    for warning in result.warnings:
+        st.warning(warning)
 
 
 def candidate_frame(metrics: dict) -> pd.DataFrame:
@@ -501,8 +516,14 @@ with scenario_tab:
             range_y=[0, 1],
             text_auto=".1%",
         )
-        figure.update_layout(showlegend=False, title="Attendance probability by scenario")
-        st.plotly_chart(clean_chart(figure, 320), use_container_width=True)
+        figure.update_layout(
+            showlegend=False,
+            title="Attendance probability by scenario",
+            bargap=0.62,
+            yaxis_tickformat=".0%",
+        )
+        figure.update_traces(textposition="outside", cliponaxis=False)
+        st.plotly_chart(clean_chart(figure, 320), use_container_width=True, config=CHART_CONFIG)
         st.markdown('<div class="note">Scenario changes do not establish that an event choice causes the modelled difference. Use this view to form hypotheses, not promises.</div>', unsafe_allow_html=True)
 
 with model_tab:
@@ -543,7 +564,7 @@ with model_tab:
         yaxis_title=None,
         xaxis_range=[0.45, max(0.70, candidates["ROC-AUC"].max() + 0.04)],
     )
-    st.plotly_chart(clean_chart(candidate_chart, 410), use_container_width=True)
+    st.plotly_chart(clean_chart(candidate_chart, 410), use_container_width=True, config=CHART_CONFIG)
 
     raw_forest = candidates.loc[candidates["Candidate"].eq("random_forest · raw")].iloc[0]
     engineered_forest = candidates.loc[
@@ -598,7 +619,7 @@ with model_tab:
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
         )
         st.plotly_chart(
-            clean_chart(threshold_chart, 430, top_margin=85), use_container_width=True
+            clean_chart(threshold_chart, 430, top_margin=85), use_container_width=True, config=CHART_CONFIG
         )
         st.caption(
             "Higher thresholds make attendance harder to predict, trading attendance recall "
@@ -627,7 +648,7 @@ with model_tab:
             yaxis_title=None,
         )
         diagnostic_left.plotly_chart(
-            clean_chart(confusion_chart, 360), use_container_width=True
+            clean_chart(confusion_chart, 360), use_container_width=True, config=CHART_CONFIG
         )
 
         fold_frame = pd.DataFrame(metrics["calibrated_champion"]["fold_metrics"])
@@ -656,7 +677,7 @@ with model_tab:
             showlegend=False,
         )
         diagnostic_right.plotly_chart(
-            clean_chart(stability_chart, 360), use_container_width=True
+            clean_chart(stability_chart, 360), use_container_width=True, config=CHART_CONFIG
         )
         st.caption(
             f"Confusion rates and threshold curves use {diagnostics['repeated_oof_predictions']:,} "
@@ -683,7 +704,7 @@ with model_tab:
         )
     )
     calibration_chart.update_layout(title="Calibration", xaxis_title="Predicted", yaxis_title="Observed")
-    chart_left.plotly_chart(clean_chart(calibration_chart, 350), use_container_width=True)
+    chart_left.plotly_chart(clean_chart(calibration_chart, 350), use_container_width=True, config=CHART_CONFIG)
 
     importance = pd.DataFrame(metrics["calibrated_champion"]["feature_importance"]).sort_values("importance_mean")
     importance_chart = px.bar(
@@ -697,7 +718,7 @@ with model_tab:
     )
     importance_chart.update_xaxes(title="ROC-AUC decrease after permutation")
     importance_chart.update_yaxes(title=None)
-    chart_right.plotly_chart(clean_chart(importance_chart, 350), use_container_width=True)
+    chart_right.plotly_chart(clean_chart(importance_chart, 350), use_container_width=True, config=CHART_CONFIG)
 
     with st.expander("Evaluation protocol and selection rule"):
         st.json(metrics["evaluation_protocol"])
@@ -731,7 +752,7 @@ with data_tab:
         color_discrete_sequence=[GOLD],
         title="Raw training missingness",
     )
-    st.plotly_chart(clean_chart(missing_chart, 390), use_container_width=True)
+    st.plotly_chart(clean_chart(missing_chart, 390), use_container_width=True, config=CHART_CONFIG)
 
     st.markdown("#### Descriptive patterns")
     insight_name = st.selectbox(
@@ -746,7 +767,12 @@ with data_tab:
         go.Bar(
             x=insight["segment"],
             y=insight["attendance_rate"],
-            marker_color=COBALT,
+            # "missing" is an absence of data, not a category: mute it so it cannot
+            # out-compete real segments for attention just by being tall.
+            marker_color=[
+                "#AEBAC8" if segment == "missing" else COBALT
+                for segment in insight["segment"]
+            ],
             error_y=dict(
                 type="data",
                 symmetric=False,
@@ -758,7 +784,7 @@ with data_tab:
         )
     )
     insight_chart.update_layout(title="Observed attendance with bootstrap 95% intervals", yaxis_tickformat=".0%")
-    st.plotly_chart(clean_chart(insight_chart, 360), use_container_width=True)
+    st.plotly_chart(clean_chart(insight_chart, 360), use_container_width=True, config=CHART_CONFIG)
     st.caption("Descriptive associations only; small segments have wide intervals and should not drive policy.")
 
     st.markdown("#### Anonymous local operations")
@@ -788,7 +814,7 @@ with data_tab:
             title="Operational scores by no-show risk band",
         )
         risk_chart.update_layout(showlegend=False)
-        st.plotly_chart(clean_chart(risk_chart, 320), use_container_width=True)
+        st.plotly_chart(clean_chart(risk_chart, 320), use_container_width=True, config=CHART_CONFIG)
     else:
         st.info("No scores have been logged yet. Use Predict or Batch score to populate this view.")
     st.markdown('<div class="source-line">Runtime logs contain no student IDs and no raw registration fields.</div>', unsafe_allow_html=True)
