@@ -26,3 +26,4 @@ uploaded_*.csv
 # Local-only prep material and task brief (not part of the submission)
 .local/
 Task-1*.pdf
+.playwright-mcp/
