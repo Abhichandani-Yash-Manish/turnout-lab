@@ -42,6 +42,10 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+# `python -m pytest` puts the working directory on sys.path but the `pytest`
+# console script does not, so `import scripts.leakage_demo` only resolved under
+# one of the two documented invocations. Put the repo root on the path for both.
+pythonpath = ["."]
 
 [tool.ruff]
 line-length = 100
