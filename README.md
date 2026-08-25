@@ -268,7 +268,7 @@ The app stores only timestamp, source, model version, probability, risk band, re
 
 ## Demo
 
-**Demo video:** add the evaluator-accessible Google Drive link before submission.
+**Demo video:** https://drive.google.com/file/d/1ncCjckSTV1ruaRGyLDKESBaOu4UTPZuO/view?usp=share_link
 
 For the full decision chain and short/long verbal explanations, see the [project walkthrough](docs/project_walkthrough.md).
 
