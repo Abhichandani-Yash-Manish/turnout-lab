@@ -1,0 +1,25 @@
+.DS_Store
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+build/
+dist/
+*.egg-info/
+
+# Runtime-only application state
+runtime/*
+!runtime/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# Local exports and temporary uploads
+*.tmp
+*.log
+uploaded_*.csv
+

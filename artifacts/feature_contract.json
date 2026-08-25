@@ -1,0 +1,85 @@
+{
+  "categorical": {
+    "club_member": {
+      "allowed_values": [
+        "no",
+        "yes"
+      ]
+    },
+    "event_day": {
+      "allowed_values": [
+        "friday",
+        "monday",
+        "saturday",
+        "sunday",
+        "thursday",
+        "tuesday",
+        "wednesday"
+      ]
+    },
+    "event_time": {
+      "allowed_values": [
+        "11:00",
+        "14:00",
+        "16:00",
+        "18:00",
+        "9:00"
+      ]
+    },
+    "event_type": {
+      "allowed_values": [
+        "competition",
+        "hackathon",
+        "social",
+        "talk",
+        "workshop"
+      ]
+    }
+  },
+  "numeric": {
+    "previous_events_attended": {
+      "max": 8.0,
+      "min": 0.0,
+      "p01": 0.0,
+      "p99": 8.0
+    },
+    "previous_events_registered": {
+      "max": 11.0,
+      "min": 0.0,
+      "p01": 0.0,
+      "p99": 9.0
+    },
+    "registration_days_before": {
+      "max": 60.0,
+      "min": -2.0,
+      "p01": 0.0,
+      "p99": 14.0
+    },
+    "travel_distance_km": {
+      "max": 120.0,
+      "min": 0.5,
+      "p01": 0.6,
+      "p99": 36.924999999999784
+    }
+  },
+  "reference_profile": {
+    "club_member": "yes",
+    "event_day": "friday",
+    "event_time": "18:00",
+    "event_type": "workshop",
+    "previous_events_attended": 3.0,
+    "previous_events_registered": 4.0,
+    "registration_days_before": 7.0,
+    "travel_distance_km": 5.5
+  },
+  "required_columns": [
+    "event_type",
+    "registration_days_before",
+    "previous_events_registered",
+    "previous_events_attended",
+    "club_member",
+    "event_day",
+    "event_time",
+    "travel_distance_km"
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "files": {
+    "test.csv": {
+      "columns": [
+        "student_id",
+        "event_type",
+        "registration_days_before",
+        "previous_events_registered",
+        "previous_events_attended",
+        "club_member",
+        "event_day",
+        "event_time",
+        "travel_distance_km"
+      ],
+      "document_url": "https://docs.google.com/spreadsheets/d/1eKM8R6Ew2woVv6cm9AZFbnbYrDTbrlIBmkLuotl8iKQ/edit",
+      "export_url": "https://docs.google.com/spreadsheets/d/1eKM8R6Ew2woVv6cm9AZFbnbYrDTbrlIBmkLuotl8iKQ/export?format=csv",
+      "rows_excluding_header": 100,
+      "sha256": "0dc40deb14e47e68b304535f269d353cac0ecb654d7a0e461e4aee48709b3fad"
+    },
+    "train.csv": {
+      "columns": [
+        "student_id",
+        "event_type",
+        "registration_days_before",
+        "previous_events_registered",
+        "previous_events_attended",
+        "club_member",
+        "event_day",
+        "event_time",
+        "travel_distance_km",
+        "attended"
+      ],
+      "document_url": "https://docs.google.com/spreadsheets/d/1-kJpEan0ubFgaT0XIqC6GZdevqOnx7qmdsP1bBuEH5g/edit",
+      "export_url": "https://docs.google.com/spreadsheets/d/1-kJpEan0ubFgaT0XIqC6GZdevqOnx7qmdsP1bBuEH5g/export?format=csv",
+      "rows_excluding_header": 508,
+      "sha256": "8c8aab033c690e328bec7e24e5eb4a92c80bc73ae381ce8556beb6a910792087"
+    }
+  },
+  "retrieved_at": "2026-08-25T04:20:46.312197+00:00",
+  "task_document": "https://docs.google.com/document/d/1J5j4YsN6r2fVGQ8Y-3snOFqtqmKH9paFI_6s8k2siIM/edit"
+}

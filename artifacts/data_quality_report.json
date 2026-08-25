@@ -1,0 +1,81 @@
+{
+  "dataset_grain": "one student registration for one event",
+  "development": {
+    "attendance_count": 252,
+    "attendance_rate": 0.6347607052896725,
+    "exact_duplicates_removed": 6,
+    "groups": 396,
+    "missing_targets_removed": 4,
+    "no_show_count": 145,
+    "rows": 397,
+    "unique_student_ids": 396
+  },
+  "generated_at": "2026-08-25T04:26:11.933503+00:00",
+  "overlap": {
+    "exact_id_and_feature_matches": 100,
+    "impact": "The official test set is not independent and cannot estimate generalization.",
+    "quarantined_training_rows": 101,
+    "remediation": "Quarantine matching training rows before target analysis and use grouped cross-validation on the remaining cohort.",
+    "severity": "critical",
+    "test_feature_rows_present_in_train": 100,
+    "test_ids_present_in_train": 100,
+    "test_rows": 100
+  },
+  "raw": {
+    "category_variants": {
+      "club_member": {
+        "yes": [
+          "YES",
+          "Yes",
+          "yes"
+        ]
+      },
+      "event_day": {},
+      "event_time": {},
+      "event_type": {
+        "hackathon": [
+          "HACKATHON",
+          "Hackathon"
+        ],
+        "workshop": [
+          "Workshop",
+          "workshop"
+        ]
+      }
+    },
+    "distance_max_km": 120.0,
+    "distance_p99_km": 25.73499999999993,
+    "duplicate_train_student_ids": 8,
+    "exact_duplicate_train_rows": 7,
+    "history_inconsistencies": 3,
+    "missing_targets": 5,
+    "negative_registration_days": 2,
+    "test_columns": 9,
+    "test_missing_by_column": {
+      "club_member": 3,
+      "event_day": 3,
+      "event_time": 4,
+      "event_type": 4,
+      "previous_events_attended": 1,
+      "previous_events_registered": 3,
+      "registration_days_before": 3,
+      "student_id": 0,
+      "travel_distance_km": 2
+    },
+    "test_rows": 100,
+    "train_columns": 10,
+    "train_missing_by_column": {
+      "attended": 5,
+      "club_member": 8,
+      "event_day": 9,
+      "event_time": 11,
+      "event_type": 12,
+      "previous_events_attended": 14,
+      "previous_events_registered": 10,
+      "registration_days_before": 15,
+      "student_id": 0,
+      "travel_distance_km": 14
+    },
+    "train_rows": 508
+  }
+}
