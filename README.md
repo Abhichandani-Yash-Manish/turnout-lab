@@ -21,6 +21,24 @@ The main technical finding was not a model result. It was a data-integrity probl
 - Anonymous SQLite logs that never store student IDs or raw registration features.
 - An executed audit notebook and automated data, model, prediction, database, and Streamlit tests.
 
+## Official task compliance
+
+| Official requirement | Turnout Lab evidence |
+|---|---|
+| Clean missing and inconsistent values | Versioned audit, documented treatments, reusable preprocessing pipeline, executed notebook |
+| Convert categorical data | Fold-local imputation and one-hot encoding with unknown-category handling |
+| Train a classification model | Prevalence baseline, logistic regression, random forest, and gradient boosting across raw/engineered representations |
+| Evaluate Precision, Recall, and F1 | Both classes plus macro-F1, balanced accuracy, ranking, calibration, and stability metrics |
+| Predict new registrations | Single form, CSV batch scorer, and CLI |
+| Return percentage likelihood | Sigmoid-calibrated attendance and no-show probabilities |
+| Identify useful insights | Three sample-sized findings with bootstrap 95% intervals |
+| Push understandable, runnable code | Pinned environment, reusable package, tests, clean-clone rehearsal, and GitHub Actions |
+| Explain approach and results | README, model card, executed notebook, walkthrough, and viva guide |
+| Demonstrate through Streamlit | Five-view local application with prediction, batch, scenario, evidence, and operations workflows |
+| Record a detailed demo | Timed 7–9 minute script and release checklist; final video link remains the submission step |
+
+The task description mentions technical/non-technical status as an example, but the supplied files do not contain a separate field for it. Turnout Lab uses the actual `event_type` values and does not invent an unsupported mapping.
+
 ## Architecture
 
 ```mermaid
@@ -91,6 +109,16 @@ The locked selection rule chose the raw-feature random forest. Its final calibra
 | Top-20% no-show lift | **1.52×** | 0.25 |
 
 This is modest predictive signal, not a high-certainty classifier. That limitation is deliberately visible in the product and [model card](docs/model_card.md).
+
+## Three club-planning insights
+
+These are descriptive associations from the leakage-safe cohort, not causal effects.
+
+1. **Workshops recorded 75.9% attendance** (`n=112`, bootstrap 95% interval 67.9%–83.0%) versus **53.8% for social events** (`n=65`, 41.5%–64.6%). Organizers can study which workshop characteristics transfer to other formats.
+2. **Club members recorded 68.9% attendance** (`n=251`, 62.9%–74.5%) versus **53.2% for non-members** (`n=141`, 45.4%–61.7%). Clearer onboarding and reminders for non-members are reasonable experiments.
+3. **Registrations made 8–14 days early recorded 73.4% attendance** (`n=188`, 66.5%–79.8%) versus **48.6% for 1–3 days early** (`n=72`, 37.5%–59.7%). Clubs can prospectively test earlier promotion windows.
+
+Tiny groups are not converted into recommendations even when their observed percentages look extreme. The full segment table and uncertainty are generated in the dashboard and metrics artifact.
 
 ## Product views
 
@@ -185,6 +213,12 @@ AI assistance was used during software development, review, and documentation. T
 ## Demo
 
 The recording plan is in [docs/demo_script.md](docs/demo_script.md).
+
+Explanation and release companions:
+
+- [Project walkthrough](docs/project_walkthrough.md) — the full decision chain and 30-second, 2-minute, and 5-minute explanations.
+- [Viva questions](docs/viva_questions.md) — evaluator questions with concise, defensible answers.
+- [Submission checklist](docs/submission_checklist.md) — requirement mapping, verification, video, and access gates.
 
 **Demo video:** add the evaluator-accessible Google Drive link before submission.
 

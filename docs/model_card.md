@@ -41,6 +41,17 @@ Reported performance uses five outer grouped folds across five fixed seeds. Conn
 
 These results indicate modest discrimination and small calibration improvement over prevalence. They do not justify high-stakes individual decisions.
 
+## Decision diagnostics
+
+- The final attendance threshold is 0.590 and was selected only from leakage-safe development out-of-fold probabilities.
+- The threshold curve reports attendance/no-show Precision, Recall, and F1, macro-F1, and predicted-attendance rate from 0.20 to 0.80.
+- The normalized confusion matrix uses repeated outer-fold predictions. Each of the 397 development rows is evaluated once per seed, producing 1,985 diagnostic predictions.
+- The fold-stability view displays ROC-AUC, macro-F1, and Brier score across all 25 grouped outer folds rather than hiding variation behind one mean.
+
+Headline Precision/Recall/F1 values average the fold-local thresholds selected without each validation fold. The diagnostic confusion matrix instead applies the final 0.590 deployment threshold uniformly to all repeated out-of-fold probabilities, so its class recalls are not expected to equal the headline fold means exactly.
+
+The raw-feature random forest also passed an explicit ablation: ROC-AUC 0.638 and macro-F1 0.590 versus 0.628 and 0.577 for its engineered-feature counterpart. Engineered fields were excluded because they did not improve grouped validation—not because feature engineering was skipped.
+
 ## Output interpretation
 
 - **Attendance probability** is the calibrated model estimate.
@@ -48,6 +59,7 @@ These results indicate modest discrimination and small calibration improvement o
 - **No-show risk band** is capacity-based: high is the top 20% of development out-of-fold no-show probabilities; medium is the 50th–80th percentile.
 - **Reliability** checks the input contract. Missing values, unseen categories, logical inconsistencies, or values outside the development distribution lower reliability independently of the probability.
 - **Associated factors** are one-field-at-a-time changes against a reference profile. They are sensitivity checks, not causal explanations.
+- **Expected batch turnout** is the sum of valid individual attendance probabilities. Rejected rows are excluded, and the result is a planning expectation rather than a guaranteed count.
 
 ## Limitations and risks
 
