@@ -5,6 +5,7 @@ import json
 
 import numpy as np
 
+import scripts.leakage_demo as leakage_demo
 from turnout_lab.config import PROVENANCE_PATH, RAW_FEATURE_COLUMNS, TEST_PATH, TRAIN_PATH
 from turnout_lab.data import feature_fingerprint, prepare_datasets
 from turnout_lab.modeling import group_splits
@@ -65,3 +66,11 @@ def test_raw_snapshots_match_committed_provenance() -> None:
     for path in (TRAIN_PATH, TEST_PATH):
         expected = provenance["files"][path.name]
         assert hashlib.sha256(path.read_bytes()).hexdigest() == expected["sha256"]
+
+def test_leakage_unaware_pipeline_memorizes_the_official_test_split() -> None:
+    """The overlap is severe enough that a naive model recites the test labels."""
+    result = leakage_demo.run()
+
+    assert result["recovered"] >= 99
+    assert result["accuracy"] >= 0.95
+    assert result["macro_f1"] >= 0.95

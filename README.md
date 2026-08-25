@@ -68,6 +68,21 @@ The same serialized pipeline powers evaluation, CLI prediction, and Streamlit. `
 | Distance outlier | maximum 120 km | Preserve, robustly transform when engineered, flag as unusual |
 | Category casing variants | `YES`, `Yes`, `yes`, etc. | Normalize whitespace and casing inside the pipeline |
 
+### Why the reported numbers look low
+
+A leakage-unaware submission would train on all 507 rows and score against the official test split. Reproduce what that reports:
+
+```bash
+uv run python scripts/leakage_demo.py
+```
+
+| Pipeline | Evaluated on | Accuracy | Macro-F1 |
+|---|---|---:|---:|
+| Leakage-unaware random forest | Official test split | **1.000** | **1.000** |
+| Turnout Lab | Grouped out-of-fold, leakage-safe cohort | 0.621 | 0.584 |
+
+The perfect score is the symptom, not the achievement — 99 of the 100 test labels are directly recoverable from the training file, so the model is reciting rows it was shown. **The lower number is the honest one.** `tests/test_data.py` asserts this memorization still reproduces, so the claim cannot quietly rot.
+
 The final leakage-safe cohort contains **397 rows**, **396 connected groups**, 252 attendances, and 145 no-shows. Full evidence is available in [the data-quality report](docs/data_quality_report.md), [the machine-readable audit](artifacts/data_quality_report.json), and [the executed notebook](notebooks/01_data_audit_and_model_selection.ipynb).
 
 ## Modeling and validation

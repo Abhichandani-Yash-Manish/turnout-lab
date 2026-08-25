@@ -766,12 +766,14 @@ with data_tab:
     operation_cards[3].metric("Batch runs", int(operations["batches"]["total"] or 0))
     risk_distribution = pd.DataFrame(operations["risk_distribution"])
     if not risk_distribution.empty:
+        risk_order = ["low", "medium", "high"]
         risk_chart = px.bar(
             risk_distribution,
             x="no_show_risk_band",
             y="count",
             color="no_show_risk_band",
             color_discrete_map={"low": COBALT, "medium": GOLD, "high": CORAL},
+            category_orders={"no_show_risk_band": risk_order},
             title="Operational scores by no-show risk band",
         )
         risk_chart.update_layout(showlegend=False)

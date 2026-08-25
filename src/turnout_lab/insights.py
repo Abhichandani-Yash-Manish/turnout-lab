@@ -39,7 +39,8 @@ def summarize_groups(frame: pd.DataFrame, column: str) -> list[dict[str, Any]]:
                 "ci_95_high": high,
             }
         )
-    return sorted(rows, key=lambda item: item["attendance_rate"], reverse=True)
+    # Keep "missing" last so the tallest bar on screen is always a real segment.
+    return sorted(rows, key=lambda item: (item["segment"] == "missing", -item["attendance_rate"]))
 
 
 def build_insights(development: pd.DataFrame) -> dict[str, list[dict[str, Any]]]:
