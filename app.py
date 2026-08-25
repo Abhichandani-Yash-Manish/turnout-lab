@@ -465,7 +465,7 @@ with scenario_tab:
             text_auto=".1%",
         )
         figure.update_layout(showlegend=False, title="Attendance probability by scenario")
-        st.plotly_chart(clean_chart(figure, 320), width="stretch")
+        st.plotly_chart(clean_chart(figure, 320), use_container_width=True)
         st.markdown('<div class="note">Scenario changes do not establish that an event choice causes the modelled difference. Use this view to form hypotheses, not promises.</div>', unsafe_allow_html=True)
 
 with model_tab:
@@ -490,7 +490,7 @@ with model_tab:
         title="Model comparison · repeated grouped validation",
     )
     candidate_chart.update_layout(showlegend=False, yaxis={"categoryorder": "total ascending"})
-    st.plotly_chart(clean_chart(candidate_chart, 410), width="stretch")
+    st.plotly_chart(clean_chart(candidate_chart, 410), use_container_width=True)
 
     chart_left, chart_right = st.columns(2)
     calibration = pd.DataFrame(metrics["calibrated_champion"]["calibration_points"])
@@ -509,7 +509,7 @@ with model_tab:
         )
     )
     calibration_chart.update_layout(title="Calibration", xaxis_title="Predicted", yaxis_title="Observed")
-    chart_left.plotly_chart(clean_chart(calibration_chart, 350), width="stretch")
+    chart_left.plotly_chart(clean_chart(calibration_chart, 350), use_container_width=True)
 
     importance = pd.DataFrame(metrics["calibrated_champion"]["feature_importance"]).sort_values("importance_mean")
     importance_chart = px.bar(
@@ -523,7 +523,7 @@ with model_tab:
     )
     importance_chart.update_xaxes(title="ROC-AUC decrease after permutation")
     importance_chart.update_yaxes(title=None)
-    chart_right.plotly_chart(clean_chart(importance_chart, 350), width="stretch")
+    chart_right.plotly_chart(clean_chart(importance_chart, 350), use_container_width=True)
 
     with st.expander("Evaluation protocol and selection rule"):
         st.json(metrics["evaluation_protocol"])
@@ -557,7 +557,7 @@ with data_tab:
         color_discrete_sequence=[GOLD],
         title="Raw training missingness",
     )
-    st.plotly_chart(clean_chart(missing_chart, 390), width="stretch")
+    st.plotly_chart(clean_chart(missing_chart, 390), use_container_width=True)
 
     st.markdown("#### Descriptive patterns")
     insight_name = st.selectbox(
@@ -584,7 +584,7 @@ with data_tab:
         )
     )
     insight_chart.update_layout(title="Observed attendance with bootstrap 95% intervals", yaxis_tickformat=".0%")
-    st.plotly_chart(clean_chart(insight_chart, 360), width="stretch")
+    st.plotly_chart(clean_chart(insight_chart, 360), use_container_width=True)
     st.caption("Descriptive associations only; small segments have wide intervals and should not drive policy.")
 
     st.markdown("#### Anonymous local operations")
@@ -607,7 +607,7 @@ with data_tab:
             title="Operational scores by no-show risk band",
         )
         risk_chart.update_layout(showlegend=False)
-        st.plotly_chart(clean_chart(risk_chart, 320), width="stretch")
+        st.plotly_chart(clean_chart(risk_chart, 320), use_container_width=True)
     else:
         st.info("No scores have been logged yet. Use Predict or Batch score to populate this view.")
     st.markdown('<div class="source-line">Runtime logs contain no student IDs and no raw registration fields.</div>', unsafe_allow_html=True)
