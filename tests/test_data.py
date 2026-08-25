@@ -4,6 +4,7 @@ import hashlib
 import json
 
 import numpy as np
+import tomllib
 
 import scripts.leakage_demo as leakage_demo
 from turnout_lab.config import PROVENANCE_PATH, RAW_FEATURE_COLUMNS, TEST_PATH, TRAIN_PATH
@@ -74,3 +75,15 @@ def test_leakage_unaware_pipeline_memorizes_the_official_test_split() -> None:
     assert result["recovered"] >= 99
     assert result["accuracy"] >= 0.95
     assert result["macro_f1"] >= 0.95
+
+def test_requirements_txt_matches_pyproject_runtime_dependencies() -> None:
+    """Two dependency sources must never drift apart."""
+    project_root = TRAIN_PATH.parents[2]
+    declared = tomllib.loads((project_root / "pyproject.toml").read_text())["project"]["dependencies"]
+    pinned = [
+        line.strip()
+        for line in (project_root / "requirements.txt").read_text().splitlines()
+        if line.strip() and not line.startswith("#")
+    ]
+
+    assert pinned == declared

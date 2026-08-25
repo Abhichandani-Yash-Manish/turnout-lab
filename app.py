@@ -3,7 +3,13 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
+
+# Streamlit Community Cloud installs dependencies but does not always install the
+# repository itself as a package. Adding src/ keeps the import working whether or
+# not `pip install .` ran.
+sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 
 import pandas as pd
 import plotly.express as px

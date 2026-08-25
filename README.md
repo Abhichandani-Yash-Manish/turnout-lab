@@ -185,7 +185,12 @@ No API key, hosted model, or external runtime service is required.
 
 ## Deploy on Streamlit Community Cloud
 
-The repository is deployment-ready for Streamlit Community Cloud. Its root `uv.lock` is the single dependency source used by the platform; notebook and development tools are optional extras, so the hosted app installs only runtime packages.
+The repository is deployment-ready for Streamlit Community Cloud, and deliberately carries two dependency sources so it installs correctly whichever one the platform detects:
+
+- `uv.lock` — the authoritative lockfile. `uv sync` also installs this repository as a package.
+- `requirements.txt` — the same pinned runtime set, for platforms that only detect pip.
+
+Notebook and development tools are optional extras, so a hosted install pulls runtime packages only. `app.py` adds `src/` to the import path at startup, so it runs whether or not the platform installed the repository as a package. Both paths are verified: a clean `uv sync` clone and a `pip install -r requirements.txt` environment with no package install both render all five views.
 
 Use these locked settings at [share.streamlit.io](https://share.streamlit.io):
 

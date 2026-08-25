@@ -1,0 +1,11 @@
+# Runtime dependencies for Streamlit Community Cloud.
+# uv.lock is the authoritative lockfile; this mirrors its runtime set so the app
+# also deploys on platforms that only detect requirements.txt.
+# Kept in step with pyproject.toml by tests/test_data.py; edit both together.
+joblib==1.5.2
+numpy==1.26.4
+pandas==2.3.3
+plotly==6.3.1
+pydantic==2.12.0
+scikit-learn==1.7.2
+streamlit==1.50.0
