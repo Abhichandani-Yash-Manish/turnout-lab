@@ -27,6 +27,7 @@ from turnout_lab.metrics import decision_diagnostics
 from turnout_lab.modeling import (
     evaluate_calibrated_champion,
     evaluate_candidates,
+    refit_for_deployment,
     train_final_bundle,
     write_training_artifacts,
 )
@@ -80,6 +81,9 @@ def run_training(
     bundle, final_oof = train_final_bundle(
         prepared.development, champion, prepared.feature_contract, quick=quick
     )
+    # Everything above is measured on the leakage-safe cohort. Only the shipped
+    # weights are refit on all labelled rows; no metric below comes from them.
+    deployed = refit_for_deployment(bundle, prepared.full_labelled, quick=quick)
 
     dummy_summary = next(
         summary for summary in summaries if summary["candidate"] == "dummy"
@@ -111,6 +115,8 @@ def run_training(
             "model_version": bundle["model_version"],
             "decision_threshold": bundle["decision_threshold"],
             "risk_thresholds": bundle["risk_thresholds"],
+            "evaluation_rows": int(len(prepared.development)),
+            "deployment_refit_rows": int(len(prepared.full_labelled)),
         },
         "calibrated_champion": calibrated,
         "decision_diagnostics": decision_diagnostics(
@@ -135,9 +141,9 @@ def run_training(
         },
     }
     metrics = _json_safe(metrics)
-    write_training_artifacts(MODEL_PATH, METRICS_PATH, bundle, metrics)
+    write_training_artifacts(MODEL_PATH, METRICS_PATH, deployed, metrics)
 
-    predictor = AttendancePredictor(bundle)
+    predictor = AttendancePredictor(deployed)
     predictions = predictor.score_dataframe(prepared.test.drop(columns=["_fingerprint"]))
     predictions.to_csv(PREDICTIONS_PATH, index=False)
     print(

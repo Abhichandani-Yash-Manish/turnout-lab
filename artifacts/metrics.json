@@ -7726,6 +7726,8 @@
   "champion": {
     "candidate": "random_forest",
     "decision_threshold": 0.5900000000000001,
+    "deployment_refit_rows": 496,
+    "evaluation_rows": 397,
     "feature_mode": "raw",
     "model_version": "turnout-lab-0.1.0",
     "risk_thresholds": {
@@ -8123,6 +8125,10 @@
         "threshold": 0.8
       }
     ]
+  },
+  "deployment_refit": {
+    "rationale": "Performance is estimated on the leakage-safe cohort; the selected pipeline is refit on every labelled row before final scoring.",
+    "rows": 496
   },
   "descriptive_insights": {
     "club_membership": [

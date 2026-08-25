@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 
+import joblib
 import pandas as pd
 import pytest
 from pydantic import ValidationError
@@ -125,3 +126,14 @@ def test_committed_metrics_are_from_full_protocol() -> None:
         sum(row) == pytest.approx(1)
         for row in diagnostics["normalized_confusion_matrix"]
     )
+
+def test_shipped_model_is_refit_on_all_labelled_rows_but_scored_on_the_safe_cohort() -> None:
+    """Widening the training set must not quietly widen what the metrics claim."""
+    bundle = joblib.load(MODEL_PATH)
+    metrics = json.loads(METRICS_PATH.read_text(encoding="utf-8"))
+
+    assert bundle["refit_on_all_labelled_rows"] is True
+    assert bundle["training_rows"] > bundle["evaluation_rows"]
+    # Reported performance still describes the leakage-safe cohort only.
+    assert bundle["evaluation_rows"] == metrics["dataset"]["rows"]
+    assert metrics["champion"]["deployment_refit_rows"] == bundle["training_rows"]

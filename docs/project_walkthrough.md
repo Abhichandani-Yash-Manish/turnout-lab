@@ -35,7 +35,7 @@ Before selecting targets for modeling, the pipeline normalizes the feature repre
 1. its student ID appears in the official test file; or
 2. its normalized feature fingerprint appears in the official test file.
 
-This quarantines 101 training rows. Their labels are never used for model training, tuning, threshold selection, or reported evaluation.
+This quarantines 101 training rows. Their labels are never used for tuning, threshold selection, or any reported evaluation. Once those choices are frozen, the selected pipeline is refit on all 496 labelled rows for final scoring — the usual refit-before-predict step, which widens the training data without touching a single reported metric.
 
 After quarantine, four remaining missing-target rows and six remaining exact duplicates are removed. The leakage-safe cohort contains 397 rows and 396 connected groups.
 

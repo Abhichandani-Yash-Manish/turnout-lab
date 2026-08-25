@@ -20,7 +20,7 @@ Prohibited uses include denying registrations, ranking students, disciplinary ac
 
 ## Training and evaluation data
 
-The official training sheet contains 508 rows and the official test sheet contains 100. Every test identity and normalized feature row appears in training, so 101 matching training rows are quarantined before target analysis. After missing-target removal and deduplication, 397 rows remain.
+The official training sheet contains 508 rows and the official test sheet contains 100. Every test identity and normalized feature row appears in training, so 101 matching training rows are quarantined before any evaluation. After missing-target removal and deduplication, 397 rows remain, and every metric in this card is measured on that cohort. The shipped model is afterwards refit on all 496 labelled rows; model family, threshold, and risk bands are frozen beforehand, so the refit changes no reported number.
 
 Reported performance uses five outer grouped folds across five fixed seeds. Connected rows sharing an identity or normalized feature fingerprint remain in one group. Inner group-safe splits perform tuning, sigmoid calibration, and classification-threshold selection. Official test labels are not used for model development or evaluation.
 

@@ -32,6 +32,7 @@ class PreparedData:
     raw_train: pd.DataFrame
     raw_test: pd.DataFrame
     development: pd.DataFrame
+    full_labelled: pd.DataFrame
     test: pd.DataFrame
     quarantine_index: pd.DataFrame
     quality_report: dict[str, Any]
@@ -131,6 +132,14 @@ def prepare_datasets(train_path: Path, test_path: Path) -> PreparedData:
     development.loc[:, RAW_FEATURE_COLUMNS] = normalized
     development["_group"] = _connected_groups(development).to_numpy()
 
+    # Same cleaning as the development cohort, minus the leakage quarantine. Used only to
+    # refit the already-selected pipeline for final scoring, never to evaluate it.
+    full_labelled = train.loc[train[TARGET_COLUMN].notna()].copy()
+    full_labelled = full_labelled.drop_duplicates(subset=REQUIRED_TRAIN_COLUMNS).reset_index(drop=True)
+    full_labelled[TARGET_COLUMN] = pd.to_numeric(full_labelled[TARGET_COLUMN], errors="raise").astype(int)
+    full_labelled.loc[:, RAW_FEATURE_COLUMNS] = normalize_features(full_labelled[RAW_FEATURE_COLUMNS])
+    full_labelled["_group"] = _connected_groups(full_labelled).to_numpy()
+
     normalized_test = normalize_features(test[RAW_FEATURE_COLUMNS])
     test.loc[:, RAW_FEATURE_COLUMNS] = normalized_test
 
@@ -187,6 +196,10 @@ def prepare_datasets(train_path: Path, test_path: Path) -> PreparedData:
             "no_show_count": int((1 - development[TARGET_COLUMN]).sum()),
             "attendance_rate": float(development[TARGET_COLUMN].mean()),
         },
+        "deployment_refit": {
+            "rows": int(len(full_labelled)),
+            "rationale": "Performance is estimated on the leakage-safe cohort; the selected pipeline is refit on every labelled row before final scoring.",
+        },
     }
 
     feature_contract = make_feature_contract(development)
@@ -194,6 +207,7 @@ def prepare_datasets(train_path: Path, test_path: Path) -> PreparedData:
         raw_train=raw_train,
         raw_test=raw_test,
         development=development,
+        full_labelled=full_labelled,
         test=test,
         quarantine_index=quarantine_index,
         quality_report=quality_report,

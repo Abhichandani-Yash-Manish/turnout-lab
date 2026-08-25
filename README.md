@@ -8,12 +8,12 @@ Leakage-aware event attendance forecasting with calibrated probabilities, no-sho
 
 Event organizers often need a better estimate of turnout than a raw registration count. Turnout Lab converts registration-time information into an attendance probability and a capacity-based no-show risk band. The result is designed for supportive actions—such as reminders and capacity planning—not for rejecting registrations or penalizing students.
 
-The main technical finding was not a model result. It was a data-integrity problem: **all 100 official test rows also appear in the training data by both student ID and normalized feature fingerprint**. Those matching training rows and their targets are quarantined before any modeling. Reported performance therefore comes only from grouped out-of-fold evaluation on the remaining development cohort.
+The main technical finding was not a model result. It was a data-integrity problem: **all 100 official test rows also appear in the training data by both student ID and normalized feature fingerprint**. Those matching training rows and their targets are quarantined before any *evaluation*, so every metric reported here comes from grouped out-of-fold scoring on the remaining development cohort. The shipped model is then refit on all labelled rows for prediction only — see [Two questions, two models](#two-questions-two-models).
 
 ## What it includes
 
 - A reproducible data audit with source snapshots, URLs, timestamps, row counts, and SHA-256 hashes.
-- Exact leakage quarantine before target analysis.
+- Exact leakage quarantine before evaluation, with a documented refit-before-predict step.
 - Fold-local imputation, categorical encoding, feature engineering, calibration, tuning, and threshold selection.
 - Comparison of a prevalence baseline, logistic regression, random forest, and gradient boosting on raw and engineered features.
 - Calibrated attendance and no-show probabilities, reliability warnings, and capacity-based risk bands.
@@ -43,13 +43,15 @@ The task description lists this as a dataset column, but **neither supplied shee
 flowchart LR
     A[Official train + test snapshots] --> B[Schema and quality audit]
     B --> C{ID or feature match<br/>with official test?}
-    C -->|Yes| Q[Quarantine row and label]
+    C -->|Yes| Q[Quarantine from evaluation]
     C -->|No| D[397-row development cohort]
     D --> E[Connected identity/fingerprint groups]
     E --> F[Nested StratifiedGroupKFold]
     F --> G[Fold-local preprocessing, tuning, calibration, threshold]
-    G --> H[Calibrated random forest]
-    H --> I[CLI and Streamlit predictor]
+    G --> H[Frozen model, threshold, risk bands]
+    Q -.rejoins for prediction only.-> R[Refit on 496 labelled rows]
+    H --> R
+    R --> I[CLI and Streamlit predictor]
     I --> J[(Anonymous SQLite operations log)]
     I --> K[100-row official prediction export]
 ```
@@ -82,6 +84,19 @@ uv run python scripts/leakage_demo.py
 | Turnout Lab | Grouped out-of-fold, leakage-safe cohort | 0.621 | 0.584 |
 
 The perfect score is the symptom, not the achievement — 99 of the 100 test labels are directly recoverable from the training file, so the model is reciting rows it was shown. **The lower number is the honest one.** `tests/test_data.py` asserts this memorization still reproduces, so the claim cannot quietly rot.
+
+### Two questions, two models
+
+"How good is this model?" and "what are your predictions for these 100 rows?" are different questions, and conflating them is how leakage does its damage. Turnout Lab answers them separately:
+
+| | Trained on | Used for |
+|---|---:|---|
+| **Evaluation** | 397-row leakage-safe cohort | Every metric reported anywhere in this repository |
+| **Shipped model** | 496 labelled rows | Scoring new registrations and the 100 official predictions |
+
+Model family, hyperparameters, the 0.59 decision threshold, and the risk-band cutoffs are all selected and frozen on the leakage-safe cohort *before* the refit. The refit only widens the training set — the ordinary refit-before-predict step — and it never touches a reported number. `tests/test_prediction.py` asserts the shipped model is the wider one and that the metrics still describe the narrower cohort, so the two can never silently merge.
+
+Quarantining is what makes the *measurement* honest. It was never a reason to throw away information at *prediction* time.
 
 The final leakage-safe cohort contains **397 rows**, **396 connected groups**, 252 attendances, and 145 no-shows. Full evidence is available in [the data-quality report](docs/data_quality_report.md), [the machine-readable audit](artifacts/data_quality_report.json), and [the executed notebook](notebooks/01_data_audit_and_model_selection.ipynb).
 

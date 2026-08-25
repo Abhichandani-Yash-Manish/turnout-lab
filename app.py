@@ -502,6 +502,11 @@ with scenario_tab:
 with model_tab:
     st.markdown("### Model card")
     st.write("Every number below is loaded from the saved evaluation artifact—nothing is hardcoded into the interface.")
+    st.caption(
+        f"Measured on the {metrics['dataset']['rows']}-row leakage-safe cohort. "
+        f"The shipped model is refit on all {metrics['champion']['deployment_refit_rows']} labelled rows "
+        "for prediction only; model choice, threshold, and risk bands are frozen before that refit."
+    )
     score_columns = st.columns(4)
     score_columns[0].metric("ROC-AUC", f"{champion_summary['roc_auc']['mean']:.3f}", f"± {champion_summary['roc_auc']['std']:.3f}")
     score_columns[1].metric("Attendance precision", percent(champion_summary["attendance_precision"]["mean"]))
@@ -703,7 +708,7 @@ with data_tab:
     audit_cards[2].metric("Exact test matches", quality["overlap"]["exact_id_and_feature_matches"])
     audit_cards[3].metric("Development rows", quality["development"]["rows"])
     st.error(
-        "The official test set is not independent: all 100 rows match training identities and features. Matching training rows are quarantined and their labels are never used for model development or evaluation."
+        "The official test set is not independent: all 100 rows match training identities and features. Matching training rows are quarantined from evaluation, so no metric shown here is measured on them. The shipped model is refit on all labelled rows for prediction only."
     )
 
     missing = pd.DataFrame(

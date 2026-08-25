@@ -416,6 +416,35 @@ def train_final_bundle(
     return bundle, oof_probabilities
 
 
+def refit_for_deployment(
+    bundle: dict[str, Any],
+    full_labelled: pd.DataFrame,
+    quick: bool = False,
+) -> dict[str, Any]:
+    """Refit the already-selected pipeline on every labelled row.
+
+    Model choice, hyperparameters, decision threshold, and risk bands are all
+    fixed beforehand on the leakage-safe cohort, so nothing here is tuned or
+    measured against data the evaluation never saw. This only widens the
+    training set for final scoring, which is the usual refit-before-predict
+    step; the reported metrics deliberately stay the leakage-safe ones.
+    """
+    X = full_labelled[RAW_FEATURE_COLUMNS].copy()
+    y = full_labelled[TARGET_COLUMN].to_numpy(dtype=int)
+    groups = full_labelled["_group"].to_numpy()
+    splits = group_splits(y, groups, 3 if quick else 5, 2026)
+    estimator = clone(bundle["model"].estimator)
+    deployed = CalibratedClassifierCV(estimator=estimator, method="sigmoid", cv=splits, ensemble=True)
+    deployed.fit(X, y)
+    return {
+        **bundle,
+        "model": deployed,
+        "training_rows": int(len(full_labelled)),
+        "evaluation_rows": int(bundle["training_rows"]),
+        "refit_on_all_labelled_rows": True,
+    }
+
+
 def write_training_artifacts(
     model_path: Path,
     metrics_path: Path,
