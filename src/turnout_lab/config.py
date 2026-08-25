@@ -19,6 +19,7 @@ METRICS_PATH = ARTIFACTS_DIR / "metrics.json"
 QUALITY_REPORT_PATH = ARTIFACTS_DIR / "data_quality_report.json"
 FEATURE_CONTRACT_PATH = ARTIFACTS_DIR / "feature_contract.json"
 PREDICTIONS_PATH = ARTIFACTS_DIR / "test_predictions.csv"
+SAMPLE_REGISTRATIONS_PATH = DATA_DIR / "samples" / "demo_registrations.csv"
 DATABASE_PATH = RUNTIME_DIR / "turnout_lab.sqlite3"
 
 MODEL_VERSION = "turnout-lab-0.1.0"

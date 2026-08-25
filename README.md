@@ -151,7 +151,7 @@ Tiny groups are not converted into recommendations even when their observed perc
 ## Product views
 
 1. **Predict** — score one registration with probability, decision threshold, risk band, reliability, warnings, and one-field-at-a-time scenario deltas.
-2. **Batch score** — validate a CSV, preserve row order, isolate rejected rows, and download predictions.
+2. **Batch score** — validate a CSV, preserve row order, isolate rejected rows, and download predictions. Upload [`data/samples/demo_registrations.csv`](data/samples/demo_registrations.csv) to see all four outcomes at once: confident scores, high no-show risk, imputed and out-of-range inputs flagged for review, and two rows rejected for impossible history and a negative distance.
 3. **Scenario lab** — compare organizer-controlled inputs while clearly labelling estimates as non-causal.
 4. **Model card** — inspect generated evaluation, calibration, candidate comparison, feature importance, and limitations.
 5. **Data & operations** — inspect audit findings and reconcile anonymous prediction/batch logs.

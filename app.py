@@ -422,6 +422,8 @@ with batch_tab:
         display["likely_to_attend"] = display["attendance_probability"].map(
             lambda value: "—" if pd.isna(value) else f"{value * 100:.0f}%"
         )
+        # Rejected rows carry no band; render an em dash rather than a literal "None".
+        display["no_show_risk_band"] = display["no_show_risk_band"].fillna("—")
         display_columns = [
             "student_id",
             "likely_to_attend",

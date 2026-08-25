@@ -1,0 +1,11 @@
+student_id,event_type,registration_days_before,previous_events_registered,previous_events_attended,club_member,event_day,event_time,travel_distance_km
+DEMO-001,workshop,12,6,6,yes,saturday,11:00,1.2
+DEMO-002,workshop,10,5,4,yes,thursday,14:00,2.0
+DEMO-003,social,1,4,1,no,friday,18:00,18.0
+DEMO-004,competition,0,7,2,no,sunday,9:00,26.5
+DEMO-005,talk,9,3,2,,tuesday,16:00,4.4
+DEMO-006,hackathon,11,,,yes,,14:00,3.1
+DEMO-007,brunch,8,4,3,yes,monday,11:00,5.0
+DEMO-008,workshop,7,5,4,yes,wednesday,14:00,95.0
+DEMO-009,talk,6,2,5,no,friday,16:00,7.5
+DEMO-010,social,5,3,2,yes,saturday,18:00,-4.0

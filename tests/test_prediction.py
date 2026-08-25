@@ -7,7 +7,13 @@ import pandas as pd
 import pytest
 from pydantic import ValidationError
 
-from turnout_lab.config import METRICS_PATH, MODEL_PATH, PREDICTIONS_PATH, TEST_PATH
+from turnout_lab.config import (
+    METRICS_PATH,
+    MODEL_PATH,
+    PREDICTIONS_PATH,
+    SAMPLE_REGISTRATIONS_PATH,
+    TEST_PATH,
+)
 from turnout_lab.prediction import AttendancePredictor, summarize_batch
 from turnout_lab.schemas import AttendanceInput
 
@@ -137,3 +143,24 @@ def test_shipped_model_is_refit_on_all_labelled_rows_but_scored_on_the_safe_coho
     # Reported performance still describes the leakage-safe cohort only.
     assert bundle["evaluation_rows"] == metrics["dataset"]["rows"]
     assert metrics["champion"]["deployment_refit_rows"] == bundle["training_rows"]
+
+def test_demo_sample_exercises_every_batch_outcome(predictor: AttendancePredictor) -> None:
+    """The recorded demo depends on this file producing all four outcomes."""
+    sample = pd.read_csv(SAMPLE_REGISTRATIONS_PATH)
+    outputs = predictor.score_dataframe(sample)
+    by_id = outputs.set_index("student_id")
+
+    assert by_id.loc["DEMO-001", "reliability"] == "high"
+    assert by_id.loc["DEMO-004", "no_show_risk_band"] == "high"
+    assert by_id.loc["DEMO-005", "reliability"] == "medium"
+    assert by_id.loc["DEMO-006", "status"] == "review_required"
+    assert "brunch" in by_id.loc["DEMO-007", "warnings"]
+    assert by_id.loc["DEMO-009", "status"] == "rejected"
+    assert by_id.loc["DEMO-010", "status"] == "rejected"
+
+    summary = summarize_batch(outputs, predictor.bundle["model_version"])
+    assert (summary.scored_rows, summary.review_required_rows, summary.rejected_rows) == (6, 2, 2)
+    # Rejected rows must not contribute to the planning totals.
+    assert summary.expected_attendees + summary.expected_no_shows == pytest.approx(
+        summary.valid_rows
+    )
