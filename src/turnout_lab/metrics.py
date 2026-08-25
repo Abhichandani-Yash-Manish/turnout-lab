@@ -111,3 +111,67 @@ def calibration_points(
         for pred, obs in zip(predicted, observed, strict=True)
     ]
 
+
+def decision_diagnostics(
+    y_true: np.ndarray,
+    probabilities: np.ndarray,
+    selected_threshold: float,
+    development_rows: int,
+    outer_seeds: list[int],
+) -> dict[str, Any]:
+    """Build policy diagnostics from repeated leakage-safe out-of-fold predictions."""
+    thresholds = sorted(
+        {
+            *np.linspace(0.20, 0.80, 31).round(10).tolist(),
+            round(float(selected_threshold), 10),
+        }
+    )
+    curve: list[dict[str, float]] = []
+    for threshold in thresholds:
+        predictions = (probabilities >= threshold).astype(int)
+        attendance_precision, attendance_recall, attendance_f1, _ = (
+            precision_recall_fscore_support(
+                y_true, predictions, average="binary", zero_division=0
+            )
+        )
+        no_show_precision, no_show_recall, no_show_f1, _ = (
+            precision_recall_fscore_support(
+                1 - y_true, 1 - predictions, average="binary", zero_division=0
+            )
+        )
+        curve.append(
+            {
+                "threshold": float(threshold),
+                "attendance_precision": float(attendance_precision),
+                "attendance_recall": float(attendance_recall),
+                "attendance_f1": float(attendance_f1),
+                "no_show_precision": float(no_show_precision),
+                "no_show_recall": float(no_show_recall),
+                "no_show_f1": float(no_show_f1),
+                "macro_f1": float(
+                    f1_score(y_true, predictions, average="macro", zero_division=0)
+                ),
+                "predicted_attendance_rate": float(predictions.mean()),
+            }
+        )
+
+    selected_predictions = (probabilities >= selected_threshold).astype(int)
+    normalized_confusion = confusion_matrix(
+        y_true,
+        selected_predictions,
+        labels=[0, 1],
+        normalize="true",
+    )
+    return {
+        "class_order": ["no_show", "attended"],
+        "normalized_confusion_matrix": normalized_confusion.tolist(),
+        "threshold_curve": curve,
+        "selected_threshold": float(selected_threshold),
+        "source": (
+            "Repeated leakage-safe outer-fold predictions; every development row is "
+            "evaluated once per outer seed."
+        ),
+        "development_rows": int(development_rows),
+        "outer_seeds": [int(seed) for seed in outer_seeds],
+        "repeated_oof_predictions": int(len(probabilities)),
+    }

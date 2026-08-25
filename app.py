@@ -24,7 +24,7 @@ from turnout_lab.database import (
     log_prediction,
     operations_summary,
 )
-from turnout_lab.prediction import AttendancePredictor
+from turnout_lab.prediction import AttendancePredictor, summarize_batch
 from turnout_lab.schemas import AttendanceInput, PredictionResult
 
 INK = "#10233B"
@@ -149,10 +149,12 @@ def percent(value: float | None, digits: int = 1) -> str:
     return f"{value * 100:.{digits}f}%"
 
 
-def clean_chart(figure: go.Figure, height: int = 350) -> go.Figure:
+def clean_chart(
+    figure: go.Figure, height: int = 350, top_margin: int = 45
+) -> go.Figure:
     figure.update_layout(
         height=height,
-        margin=dict(l=20, r=20, t=45, b=20),
+        margin=dict(l=20, r=20, t=top_margin, b=20),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family="DM Sans, sans-serif", color=INK),
@@ -229,6 +231,7 @@ metrics = load_json(METRICS_PATH)
 quality = load_json(QUALITY_REPORT_PATH)
 contract = predictor.contract
 champion_summary = metrics["calibrated_champion"]["summary"]
+diagnostics = metrics.get("decision_diagnostics")
 
 st.markdown(
     """
@@ -357,22 +360,36 @@ with batch_tab:
             try:
                 outputs = predictor.score_dataframe(source_frame)
                 st.session_state["batch_outputs"] = outputs
-                summary = {
-                    "row_count": len(outputs),
-                    "scored_count": int(outputs["status"].isin(["scored", "review_required"]).sum()),
-                    "rejected_count": int(outputs["status"].eq("rejected").sum()),
-                    "review_count": int(outputs["status"].eq("review_required").sum()),
-                }
-                log_batch(DATABASE_PATH, predictor.bundle["model_version"], summary)
+                batch_summary = summarize_batch(outputs, predictor.bundle["model_version"])
+                st.session_state["batch_summary"] = batch_summary
+                log_batch(DATABASE_PATH, predictor.bundle["model_version"], batch_summary)
                 log_batch_predictions(DATABASE_PATH, outputs)
             except ValueError as error:
                 st.error(str(error))
     if "batch_outputs" in st.session_state:
         outputs = st.session_state["batch_outputs"]
-        cards = st.columns(3)
-        cards[0].metric("Rows", len(outputs))
-        cards[1].metric("High no-show risk", int(outputs["no_show_risk_band"].eq("high").sum()))
-        cards[2].metric("Rejected", int(outputs["status"].eq("rejected").sum()))
+        batch_summary = st.session_state.get("batch_summary") or summarize_batch(
+            outputs, predictor.bundle["model_version"]
+        )
+        planning_cards = st.columns(3)
+        planning_cards[0].metric("Valid registrations", batch_summary.valid_rows)
+        planning_cards[1].metric(
+            "Expected attendees", f"{batch_summary.expected_attendees:.1f}"
+        )
+        planning_cards[2].metric(
+            "Expected no-shows", f"{batch_summary.expected_no_shows:.1f}"
+        )
+        quality_cards = st.columns(3)
+        quality_cards[0].metric("High no-show risk", batch_summary.high_risk_count)
+        quality_cards[1].metric(
+            "Review required", batch_summary.review_required_rows
+        )
+        quality_cards[2].metric("Rejected", batch_summary.rejected_rows)
+        st.markdown(
+            '<div class="note">Expected totals are sums of individual calibrated probabilities. '
+            "They support aggregate planning; they are not guaranteed attendance counts.</div>",
+            unsafe_allow_html=True,
+        )
         display_columns = [
             "student_id",
             "attendance_probability",
@@ -477,20 +494,152 @@ with model_tab:
     score_columns[2].metric("Attendance recall", percent(champion_summary["attendance_recall"]["mean"]))
     score_columns[3].metric("No-show F1", f"{champion_summary['no_show_f1']['mean']:.3f}")
 
-    candidates = candidate_frame(metrics)
-    candidate_chart = px.bar(
-        candidates,
-        x="ROC-AUC",
-        y="Candidate",
-        orientation="h",
-        color="Candidate",
-        color_discrete_sequence=[SLATE, "#8DA0B3", "#A8B6C4", COBALT, "#6C81DC", GOLD, "#D6A139"],
-        range_x=[0.45, max(0.70, candidates["ROC-AUC"].max() + 0.03)],
-        text_auto=".3f",
-        title="Model comparison · repeated grouped validation",
+    candidates = candidate_frame(metrics).sort_values("ROC-AUC")
+    champion_label = (
+        f"{metrics['champion']['candidate']} · {metrics['champion']['feature_mode']}"
     )
-    candidate_chart.update_layout(showlegend=False, yaxis={"categoryorder": "total ascending"})
+    candidate_chart = go.Figure(
+        go.Bar(
+            x=candidates["ROC-AUC"],
+            y=candidates["Candidate"],
+            orientation="h",
+            marker_color=[
+                COBALT if label == champion_label else "#A8B6C4"
+                for label in candidates["Candidate"]
+            ],
+            text=candidates["ROC-AUC"].map(lambda value: f"{value:.3f}"),
+            textposition="outside",
+            hovertemplate="%{y}<br>ROC-AUC %{x:.3f}<extra></extra>",
+        )
+    )
+    candidate_chart.update_layout(
+        title="Model comparison · repeated grouped validation",
+        xaxis_title="ROC-AUC",
+        yaxis_title=None,
+        xaxis_range=[0.45, max(0.70, candidates["ROC-AUC"].max() + 0.04)],
+    )
     st.plotly_chart(clean_chart(candidate_chart, 410), use_container_width=True)
+
+    raw_forest = candidates.loc[candidates["Candidate"].eq("random_forest · raw")].iloc[0]
+    engineered_forest = candidates.loc[
+        candidates["Candidate"].eq("random_forest · engineered")
+    ].iloc[0]
+    st.markdown(
+        '<div class="note"><strong>Feature ablation:</strong> the raw-feature random forest '
+        f"outperformed its engineered counterpart by "
+        f"{raw_forest['ROC-AUC'] - engineered_forest['ROC-AUC']:+.3f} ROC-AUC and "
+        f"{raw_forest['Macro-F1'] - engineered_forest['Macro-F1']:+.3f} macro-F1. "
+        "Derived fields were tested, not assumed useful, and were excluded from the champion.</div>",
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("#### Decision diagnostics")
+    if diagnostics is None:
+        st.warning("Decision diagnostics are missing. Run `uv run turnout-lab train` to rebuild them.")
+    else:
+        threshold_frame = pd.DataFrame(diagnostics["threshold_curve"])
+        threshold_chart = go.Figure()
+        threshold_series = [
+            ("Attendance precision", "attendance_precision", COBALT, "solid"),
+            ("Attendance recall", "attendance_recall", COBALT, "dash"),
+            ("No-show precision", "no_show_precision", CORAL, "solid"),
+            ("No-show recall", "no_show_recall", CORAL, "dash"),
+            ("Macro-F1", "macro_f1", GOLD, "dot"),
+        ]
+        for label, column, color, dash in threshold_series:
+            threshold_chart.add_trace(
+                go.Scatter(
+                    x=threshold_frame["threshold"],
+                    y=threshold_frame[column],
+                    mode="lines",
+                    name=label,
+                    line=dict(color=color, dash=dash, width=3 if label == "Macro-F1" else 2),
+                    hovertemplate=f"Threshold %{{x:.2f}}<br>{label} %{{y:.1%}}<extra></extra>",
+                )
+            )
+        threshold_chart.add_vline(
+            x=diagnostics["selected_threshold"],
+            line_color=INK,
+            line_dash="dash",
+            annotation_text=f"Selected {diagnostics['selected_threshold']:.2f}",
+            annotation_position="top right",
+        )
+        threshold_chart.update_layout(
+            title="Classification policy across thresholds",
+            xaxis_title="Attendance decision threshold",
+            yaxis_title="Metric value",
+            yaxis_tickformat=".0%",
+            yaxis_range=[0, 1],
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
+        )
+        st.plotly_chart(
+            clean_chart(threshold_chart, 430, top_margin=85), use_container_width=True
+        )
+        st.caption(
+            "Higher thresholds make attendance harder to predict, trading attendance recall "
+            "for attendance precision and no-show recall. The marker is the final development-only threshold."
+        )
+
+        diagnostic_left, diagnostic_right = st.columns(2)
+        confusion_values = diagnostics["normalized_confusion_matrix"]
+        confusion_chart = go.Figure(
+            go.Heatmap(
+                z=confusion_values,
+                x=["Predicted no-show", "Predicted attend"],
+                y=["Actual no-show", "Actual attend"],
+                zmin=0,
+                zmax=1,
+                colorscale=[[0, "#F7FAFC"], [1, COBALT]],
+                text=[[f"{value:.1%}" for value in row] for row in confusion_values],
+                texttemplate="%{text}",
+                hovertemplate="%{y}<br>%{x}<br>%{z:.1%}<extra></extra>",
+                colorbar=dict(title="Rate", tickformat=".0%"),
+            )
+        )
+        confusion_chart.update_layout(
+            title="Normalized repeated OOF confusion matrix",
+            xaxis_title=None,
+            yaxis_title=None,
+        )
+        diagnostic_left.plotly_chart(
+            clean_chart(confusion_chart, 360), use_container_width=True
+        )
+
+        fold_frame = pd.DataFrame(metrics["calibrated_champion"]["fold_metrics"])
+        stability_chart = go.Figure()
+        for label, column, color in [
+            ("ROC-AUC", "roc_auc", COBALT),
+            ("Macro-F1", "macro_f1", CORAL),
+            ("Brier ↓", "brier", GOLD),
+        ]:
+            stability_chart.add_trace(
+                go.Box(
+                    y=fold_frame[column],
+                    name=label,
+                    marker_color=color,
+                    line_color=color,
+                    boxpoints="all",
+                    jitter=0.28,
+                    pointpos=0,
+                    hovertemplate=f"{label} %{{y:.3f}}<extra></extra>",
+                )
+            )
+        stability_chart.update_layout(
+            title="Performance across 25 grouped outer folds",
+            yaxis_title="Metric value",
+            yaxis_range=[0, 1],
+            showlegend=False,
+        )
+        diagnostic_right.plotly_chart(
+            clean_chart(stability_chart, 360), use_container_width=True
+        )
+        st.caption(
+            f"Confusion rates and threshold curves use {diagnostics['repeated_oof_predictions']:,} "
+            f"predictions: each of {diagnostics['development_rows']} rows is evaluated once for "
+            f"each of {len(diagnostics['outer_seeds'])} outer seeds. The matrix applies the final "
+            f"{diagnostics['selected_threshold']:.2f} policy uniformly; headline recall averages "
+            "fold-local policies. Brier is lower-is-better."
+        )
 
     chart_left, chart_right = st.columns(2)
     calibration = pd.DataFrame(metrics["calibrated_champion"]["calibration_points"])

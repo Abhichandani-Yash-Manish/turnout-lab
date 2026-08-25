@@ -7743,6 +7743,387 @@
     "rows": 397,
     "unique_student_ids": 396
   },
+  "decision_diagnostics": {
+    "class_order": [
+      "no_show",
+      "attended"
+    ],
+    "development_rows": 397,
+    "normalized_confusion_matrix": [
+      [
+        0.43586206896551727,
+        0.5641379310344827
+      ],
+      [
+        0.2619047619047619,
+        0.7380952380952381
+      ]
+    ],
+    "outer_seeds": [
+      11,
+      22,
+      33,
+      44,
+      55
+    ],
+    "repeated_oof_predictions": 1985,
+    "selected_threshold": 0.5900000000000001,
+    "source": "Repeated leakage-safe outer-fold predictions; every development row is evaluated once per outer seed.",
+    "threshold_curve": [
+      {
+        "attendance_f1": 0.7765793528505393,
+        "attendance_precision": 0.6347607052896725,
+        "attendance_recall": 1.0,
+        "macro_f1": 0.3882896764252696,
+        "no_show_f1": 0.0,
+        "no_show_precision": 0.0,
+        "no_show_recall": 0.0,
+        "predicted_attendance_rate": 1.0,
+        "threshold": 0.2
+      },
+      {
+        "attendance_f1": 0.7765793528505393,
+        "attendance_precision": 0.6347607052896725,
+        "attendance_recall": 1.0,
+        "macro_f1": 0.3882896764252696,
+        "no_show_f1": 0.0,
+        "no_show_precision": 0.0,
+        "no_show_recall": 0.0,
+        "predicted_attendance_rate": 1.0,
+        "threshold": 0.22
+      },
+      {
+        "attendance_f1": 0.7765793528505393,
+        "attendance_precision": 0.6347607052896725,
+        "attendance_recall": 1.0,
+        "macro_f1": 0.3882896764252696,
+        "no_show_f1": 0.0,
+        "no_show_precision": 0.0,
+        "no_show_recall": 0.0,
+        "predicted_attendance_rate": 1.0,
+        "threshold": 0.24
+      },
+      {
+        "attendance_f1": 0.7765793528505393,
+        "attendance_precision": 0.6347607052896725,
+        "attendance_recall": 1.0,
+        "macro_f1": 0.3882896764252696,
+        "no_show_f1": 0.0,
+        "no_show_precision": 0.0,
+        "no_show_recall": 0.0,
+        "predicted_attendance_rate": 1.0,
+        "threshold": 0.26
+      },
+      {
+        "attendance_f1": 0.7765793528505393,
+        "attendance_precision": 0.6347607052896725,
+        "attendance_recall": 1.0,
+        "macro_f1": 0.3882896764252696,
+        "no_show_f1": 0.0,
+        "no_show_precision": 0.0,
+        "no_show_recall": 0.0,
+        "predicted_attendance_rate": 1.0,
+        "threshold": 0.28
+      },
+      {
+        "attendance_f1": 0.7768187422934648,
+        "attendance_precision": 0.6350806451612904,
+        "attendance_recall": 1.0,
+        "macro_f1": 0.389786781615052,
+        "no_show_f1": 0.0027548209366391185,
+        "no_show_precision": 1.0,
+        "no_show_recall": 0.001379310344827586,
+        "predicted_attendance_rate": 0.9994962216624685,
+        "threshold": 0.3
+      },
+      {
+        "attendance_f1": 0.7770582793709528,
+        "attendance_precision": 0.6354009077155824,
+        "attendance_recall": 1.0,
+        "macro_f1": 0.3912801713223402,
+        "no_show_f1": 0.005502063273727648,
+        "no_show_precision": 1.0,
+        "no_show_recall": 0.002758620689655172,
+        "predicted_attendance_rate": 0.998992443324937,
+        "threshold": 0.32
+      },
+      {
+        "attendance_f1": 0.7770582793709528,
+        "attendance_precision": 0.6354009077155824,
+        "attendance_recall": 1.0,
+        "macro_f1": 0.3912801713223402,
+        "no_show_f1": 0.005502063273727648,
+        "no_show_precision": 1.0,
+        "no_show_recall": 0.002758620689655172,
+        "predicted_attendance_rate": 0.998992443324937,
+        "threshold": 0.34
+      },
+      {
+        "attendance_f1": 0.7770228536133416,
+        "attendance_precision": 0.6359959555106168,
+        "attendance_recall": 0.9984126984126984,
+        "macro_f1": 0.39534202789956696,
+        "no_show_f1": 0.01366120218579235,
+        "no_show_precision": 0.7142857142857143,
+        "no_show_recall": 0.006896551724137931,
+        "predicted_attendance_rate": 0.9964735516372796,
+        "threshold": 0.36
+      },
+      {
+        "attendance_f1": 0.7784653465346535,
+        "attendance_precision": 0.6379310344827587,
+        "attendance_recall": 0.9984126984126984,
+        "macro_f1": 0.4041378223188173,
+        "no_show_f1": 0.02981029810298103,
+        "no_show_precision": 0.8461538461538461,
+        "no_show_recall": 0.015172413793103448,
+        "predicted_attendance_rate": 0.9934508816120907,
+        "threshold": 0.38
+      },
+      {
+        "attendance_f1": 0.7801242236024845,
+        "attendance_precision": 0.6408163265306123,
+        "attendance_recall": 0.9968253968253968,
+        "macro_f1": 0.41806211180124225,
+        "no_show_f1": 0.056,
+        "no_show_precision": 0.84,
+        "no_show_recall": 0.028965517241379312,
+        "predicted_attendance_rate": 0.9874055415617129,
+        "threshold": 0.4
+      },
+      {
+        "attendance_f1": 0.7798507462686567,
+        "attendance_precision": 0.6411042944785276,
+        "attendance_recall": 0.9952380952380953,
+        "macro_f1": 0.4204293519141692,
+        "no_show_f1": 0.0610079575596817,
+        "no_show_precision": 0.7931034482758621,
+        "no_show_recall": 0.031724137931034485,
+        "predicted_attendance_rate": 0.985390428211587,
+        "threshold": 0.42
+      },
+      {
+        "attendance_f1": 0.7819548872180451,
+        "attendance_precision": 0.6459627329192547,
+        "attendance_recall": 0.9904761904761905,
+        "macro_f1": 0.44367667240079633,
+        "no_show_f1": 0.10539845758354756,
+        "no_show_precision": 0.7735849056603774,
+        "no_show_recall": 0.05655172413793103,
+        "predicted_attendance_rate": 0.9732997481108312,
+        "threshold": 0.44
+      },
+      {
+        "attendance_f1": 0.7795750079289565,
+        "attendance_precision": 0.6492340200739567,
+        "attendance_recall": 0.9753968253968254,
+        "macro_f1": 0.46445090665725675,
+        "no_show_f1": 0.14932680538555693,
+        "no_show_precision": 0.6630434782608695,
+        "no_show_recall": 0.08413793103448276,
+        "predicted_attendance_rate": 0.9536523929471032,
+        "threshold": 0.46
+      },
+      {
+        "attendance_f1": 0.7810688989053445,
+        "attendance_precision": 0.6570964247020585,
+        "attendance_recall": 0.9626984126984127,
+        "macro_f1": 0.49701593093415375,
+        "no_show_f1": 0.21296296296296297,
+        "no_show_precision": 0.6618705035971223,
+        "no_show_recall": 0.12689655172413794,
+        "predicted_attendance_rate": 0.9299748110831234,
+        "threshold": 0.48
+      },
+      {
+        "attendance_f1": 0.776246719160105,
+        "attendance_precision": 0.6616331096196868,
+        "attendance_recall": 0.9388888888888889,
+        "macro_f1": 0.51827520339784,
+        "no_show_f1": 0.2603036876355748,
+        "no_show_precision": 0.6091370558375635,
+        "no_show_recall": 0.16551724137931034,
+        "predicted_attendance_rate": 0.9007556675062972,
+        "threshold": 0.5
+      },
+      {
+        "attendance_f1": 0.7679892400806994,
+        "attendance_precision": 0.6662777129521587,
+        "attendance_recall": 0.9063492063492063,
+        "macro_f1": 0.537609077871675,
+        "no_show_f1": 0.3072289156626506,
+        "no_show_precision": 0.5645756457564576,
+        "no_show_recall": 0.2110344827586207,
+        "predicted_attendance_rate": 0.8634760705289672,
+        "threshold": 0.52
+      },
+      {
+        "attendance_f1": 0.7546907574704657,
+        "attendance_precision": 0.6711990111248455,
+        "attendance_recall": 0.861904761904762,
+        "macro_f1": 0.5540853054751596,
+        "no_show_f1": 0.3534798534798535,
+        "no_show_precision": 0.5258855585831063,
+        "no_show_recall": 0.26620689655172414,
+        "predicted_attendance_rate": 0.8151133501259445,
+        "threshold": 0.54
+      },
+      {
+        "attendance_f1": 0.7440860215053764,
+        "attendance_precision": 0.6784313725490196,
+        "attendance_recall": 0.8238095238095238,
+        "macro_f1": 0.5695006378713323,
+        "no_show_f1": 0.3949152542372881,
+        "no_show_precision": 0.512087912087912,
+        "no_show_recall": 0.3213793103448276,
+        "predicted_attendance_rate": 0.7707808564231738,
+        "threshold": 0.56
+      },
+      {
+        "attendance_f1": 0.7212007504690432,
+        "attendance_precision": 0.6839857651245551,
+        "attendance_recall": 0.7626984126984127,
+        "macro_f1": 0.5759260457326059,
+        "no_show_f1": 0.4306513409961686,
+        "no_show_precision": 0.4844827586206897,
+        "no_show_recall": 0.3875862068965517,
+        "predicted_attendance_rate": 0.707808564231738,
+        "threshold": 0.58
+      },
+      {
+        "attendance_f1": 0.715659869180454,
+        "attendance_precision": 0.6945481702763256,
+        "attendance_recall": 0.7380952380952381,
+        "macro_f1": 0.5883186289738885,
+        "no_show_f1": 0.46097738876732314,
+        "no_show_precision": 0.4891640866873065,
+        "no_show_recall": 0.43586206896551727,
+        "predicted_attendance_rate": 0.6745591939546599,
+        "threshold": 0.59
+      },
+      {
+        "attendance_f1": 0.6969334926324173,
+        "attendance_precision": 0.6994404476418865,
+        "attendance_recall": 0.6944444444444444,
+        "macro_f1": 0.5876716812031175,
+        "no_show_f1": 0.47840986977381766,
+        "no_show_precision": 0.47547683923705725,
+        "no_show_recall": 0.48137931034482756,
+        "predicted_attendance_rate": 0.6302267002518892,
+        "threshold": 0.6
+      },
+      {
+        "attendance_f1": 0.663578947368421,
+        "attendance_precision": 0.7067264573991031,
+        "attendance_recall": 0.6253968253968254,
+        "macro_f1": 0.5813192542484739,
+        "no_show_f1": 0.4990595611285266,
+        "no_show_precision": 0.4574712643678161,
+        "no_show_recall": 0.5489655172413793,
+        "predicted_attendance_rate": 0.5617128463476071,
+        "threshold": 0.62
+      },
+      {
+        "attendance_f1": 0.6262265834076717,
+        "attendance_precision": 0.714867617107943,
+        "attendance_recall": 0.5571428571428572,
+        "macro_f1": 0.570636439851984,
+        "no_show_f1": 0.5150462962962963,
+        "no_show_precision": 0.4436689930209372,
+        "no_show_recall": 0.6137931034482759,
+        "predicted_attendance_rate": 0.4947103274559194,
+        "threshold": 0.64
+      },
+      {
+        "attendance_f1": 0.5753554502369668,
+        "attendance_precision": 0.7141176470588235,
+        "attendance_recall": 0.48174603174603176,
+        "macro_f1": 0.5468175100647199,
+        "no_show_f1": 0.5182795698924731,
+        "no_show_precision": 0.42466960352422906,
+        "no_show_recall": 0.6648275862068965,
+        "predicted_attendance_rate": 0.4282115869017632,
+        "threshold": 0.66
+      },
+      {
+        "attendance_f1": 0.5313912606730287,
+        "attendance_precision": 0.7236662106703147,
+        "attendance_recall": 0.41984126984126985,
+        "macro_f1": 0.5299705166427295,
+        "no_show_f1": 0.5285497726124305,
+        "no_show_precision": 0.41706539074960125,
+        "no_show_recall": 0.7213793103448276,
+        "predicted_attendance_rate": 0.36826196473551637,
+        "threshold": 0.68
+      },
+      {
+        "attendance_f1": 0.4707792207792208,
+        "attendance_precision": 0.7397959183673469,
+        "attendance_recall": 0.34523809523809523,
+        "macro_f1": 0.504946632067273,
+        "no_show_f1": 0.5391140433553252,
+        "no_show_precision": 0.4094488188976378,
+        "no_show_recall": 0.7889655172413793,
+        "predicted_attendance_rate": 0.29622166246851384,
+        "threshold": 0.7
+      },
+      {
+        "attendance_f1": 0.3931724543849323,
+        "attendance_precision": 0.7608200455580866,
+        "attendance_recall": 0.2650793650793651,
+        "macro_f1": 0.4695937128815899,
+        "no_show_f1": 0.5460149713782475,
+        "no_show_precision": 0.40103492884864167,
+        "no_show_recall": 0.8551724137931035,
+        "predicted_attendance_rate": 0.22115869017632242,
+        "threshold": 0.72
+      },
+      {
+        "attendance_f1": 0.2952503209242619,
+        "attendance_precision": 0.7718120805369127,
+        "attendance_recall": 0.18253968253968253,
+        "macro_f1": 0.4200132201636235,
+        "no_show_f1": 0.5447761194029851,
+        "no_show_precision": 0.3894487255483106,
+        "no_show_recall": 0.9062068965517242,
+        "predicted_attendance_rate": 0.15012594458438286,
+        "threshold": 0.74
+      },
+      {
+        "attendance_f1": 0.21706484641638224,
+        "attendance_precision": 0.775609756097561,
+        "attendance_recall": 0.1261904761904762,
+        "macro_f1": 0.37959030743972805,
+        "no_show_f1": 0.5421157684630739,
+        "no_show_precision": 0.3814606741573034,
+        "no_show_recall": 0.9365517241379311,
+        "predicted_attendance_rate": 0.10327455919395466,
+        "threshold": 0.76
+      },
+      {
+        "attendance_f1": 0.12271731190650109,
+        "attendance_precision": 0.7706422018348624,
+        "attendance_recall": 0.06666666666666667,
+        "macro_f1": 0.3304859146998864,
+        "no_show_f1": 0.5382545174932718,
+        "no_show_precision": 0.373134328358209,
+        "no_show_recall": 0.9655172413793104,
+        "predicted_attendance_rate": 0.05491183879093199,
+        "threshold": 0.78
+      },
+      {
+        "attendance_f1": 0.059496567505720827,
+        "attendance_precision": 0.7647058823529411,
+        "attendance_recall": 0.030952380952380953,
+        "macro_f1": 0.2978942032714764,
+        "no_show_f1": 0.536291839037232,
+        "no_show_precision": 0.3686659772492244,
+        "no_show_recall": 0.983448275862069,
+        "predicted_attendance_rate": 0.025692695214105794,
+        "threshold": 0.8
+      }
+    ]
+  },
   "descriptive_insights": {
     "club_membership": [
       {

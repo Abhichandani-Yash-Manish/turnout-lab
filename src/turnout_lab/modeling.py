@@ -303,7 +303,7 @@ def evaluate_calibrated_champion(
     development: pd.DataFrame,
     champion: CandidateSpec,
     quick: bool = False,
-) -> dict[str, Any]:
+) -> tuple[dict[str, Any], np.ndarray, np.ndarray]:
     X = development[RAW_FEATURE_COLUMNS].copy()
     y = development[TARGET_COLUMN].to_numpy(dtype=int)
     groups = development["_group"].to_numpy()
@@ -366,15 +366,19 @@ def evaluate_calibrated_champion(
         key=lambda item: item["importance_mean"],
         reverse=True,
     )
-    return {
-        "candidate": champion.name,
-        "feature_mode": champion.feature_mode,
-        "summary": summarize_fold_metrics(fold_metrics),
-        "aggregate_repeated_oof": aggregate,
-        "fold_metrics": fold_metrics,
-        "calibration_points": calibration_points(targets_array, probabilities_array),
-        "feature_importance": feature_importance,
-    }
+    return (
+        {
+            "candidate": champion.name,
+            "feature_mode": champion.feature_mode,
+            "summary": summarize_fold_metrics(fold_metrics),
+            "aggregate_repeated_oof": aggregate,
+            "fold_metrics": fold_metrics,
+            "calibration_points": calibration_points(targets_array, probabilities_array),
+            "feature_importance": feature_importance,
+        },
+        targets_array,
+        probabilities_array,
+    )
 
 
 def train_final_bundle(

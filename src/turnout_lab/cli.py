@@ -15,6 +15,7 @@ from turnout_lab.config import (
     FEATURE_CONTRACT_PATH,
     METRICS_PATH,
     MODEL_PATH,
+    OUTER_SEEDS,
     PREDICTIONS_PATH,
     QUALITY_REPORT_PATH,
     TEST_PATH,
@@ -22,6 +23,7 @@ from turnout_lab.config import (
 )
 from turnout_lab.data import prepare_datasets, write_json
 from turnout_lab.insights import build_insights
+from turnout_lab.metrics import decision_diagnostics
 from turnout_lab.modeling import (
     evaluate_calibrated_champion,
     evaluate_candidates,
@@ -72,7 +74,9 @@ def run_training(
     )
 
     summaries, candidate_folds, champion = evaluate_candidates(prepared.development, quick=quick)
-    calibrated = evaluate_calibrated_champion(prepared.development, champion, quick=quick)
+    calibrated, diagnostic_targets, diagnostic_probabilities = evaluate_calibrated_champion(
+        prepared.development, champion, quick=quick
+    )
     bundle, final_oof = train_final_bundle(
         prepared.development, champion, prepared.feature_contract, quick=quick
     )
@@ -109,6 +113,13 @@ def run_training(
             "risk_thresholds": bundle["risk_thresholds"],
         },
         "calibrated_champion": calibrated,
+        "decision_diagnostics": decision_diagnostics(
+            diagnostic_targets,
+            diagnostic_probabilities,
+            selected_threshold=bundle["decision_threshold"],
+            development_rows=len(prepared.development),
+            outer_seeds=OUTER_SEEDS[:1] if quick else OUTER_SEEDS,
+        ),
         "final_fit_oof": {
             "rows": int(len(final_oof)),
             "mean_attendance_probability": float(final_oof.mean()),
@@ -185,4 +196,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

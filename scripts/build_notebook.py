@@ -71,6 +71,7 @@ def main() -> None:
             prepared = prepare_datasets(TRAIN_PATH, TEST_PATH)
             metrics = json.loads(METRICS_PATH.read_text(encoding="utf-8"))
             quality = json.loads(QUALITY_REPORT_PATH.read_text(encoding="utf-8"))
+            diagnostics = metrics["decision_diagnostics"]
             """
         ),
         markdown("## Data"),
@@ -145,6 +146,57 @@ def main() -> None:
             plt.show()
             """
         ),
+        markdown(
+            """
+            ### Decision diagnostics
+
+            A probability model becomes a classification policy only after choosing a threshold. The next views show the precision/recall trade-off at alternative thresholds, the error profile at the final threshold, and stability across the 25 grouped outer folds. Each development row is evaluated once per outer seed. Headline class metrics average fold-local thresholds; the confusion matrix applies the final 0.59 policy uniformly, so the two summaries answer different questions.
+            """
+        ),
+        code(
+            """
+            threshold_curve = pd.DataFrame(diagnostics["threshold_curve"])
+            selected_threshold = diagnostics["selected_threshold"]
+
+            fig, axes = plt.subplots(1, 2, figsize=(12, 4.5))
+            axes[0].plot(threshold_curve["threshold"], threshold_curve["attendance_precision"], color="#3454D1", label="Attendance precision")
+            axes[0].plot(threshold_curve["threshold"], threshold_curve["attendance_recall"], color="#3454D1", linestyle="--", label="Attendance recall")
+            axes[0].plot(threshold_curve["threshold"], threshold_curve["no_show_precision"], color="#F0645A", label="No-show precision")
+            axes[0].plot(threshold_curve["threshold"], threshold_curve["no_show_recall"], color="#F0645A", linestyle="--", label="No-show recall")
+            axes[0].plot(threshold_curve["threshold"], threshold_curve["macro_f1"], color="#E8B44C", linewidth=2.5, label="Macro-F1")
+            axes[0].axvline(selected_threshold, color="#10233B", linestyle=":", label=f"Selected {selected_threshold:.2f}")
+            axes[0].set(xlabel="Attendance threshold", ylabel="Metric value", ylim=(0, 1), title="Threshold policy trade-offs")
+            axes[0].legend(fontsize=8)
+
+            confusion = pd.DataFrame(
+                diagnostics["normalized_confusion_matrix"],
+                index=["Actual no-show", "Actual attend"],
+                columns=["Predicted no-show", "Predicted attend"],
+            )
+            image = axes[1].imshow(confusion, cmap="Blues", vmin=0, vmax=1)
+            for row in range(2):
+                for column in range(2):
+                    axes[1].text(column, row, f"{confusion.iloc[row, column]:.1%}", ha="center", va="center", color="#10233B")
+            axes[1].set_xticks(range(2), confusion.columns, rotation=20, ha="right")
+            axes[1].set_yticks(range(2), confusion.index)
+            axes[1].set_title("Normalized repeated OOF confusion matrix")
+            fig.colorbar(image, ax=axes[1], fraction=0.046, pad=0.04)
+            plt.tight_layout()
+            plt.show()
+            """
+        ),
+        code(
+            """
+            fold_metrics = pd.DataFrame(metrics["calibrated_champion"]["fold_metrics"])
+            stability = fold_metrics[["roc_auc", "macro_f1", "brier"]].rename(
+                columns={"roc_auc": "ROC-AUC", "macro_f1": "Macro-F1", "brier": "Brier (lower is better)"}
+            )
+            ax = stability.plot.box(figsize=(8, 4.5), color=dict(boxes="#3454D1", whiskers="#60758A", medians="#F0645A", caps="#60758A"))
+            ax.set(title="Performance stability across 25 grouped outer folds", ylabel="Metric value", ylim=(0, 1))
+            plt.tight_layout()
+            plt.show()
+            """
+        ),
         code(
             """
             calibration = pd.DataFrame(metrics["calibrated_champion"]["calibration_points"])
@@ -167,6 +219,17 @@ def main() -> None:
             event_insights.style.format({
                 "attendance_rate": "{:.1%}", "ci_95_low": "{:.1%}", "ci_95_high": "{:.1%}"
             })
+            """
+        ),
+        markdown(
+            """
+            ### Three planning insights
+
+            - Workshops recorded **75.9% attendance** (`n=112`) versus **53.8%** for social events (`n=65`).
+            - Club members recorded **68.9% attendance** (`n=251`) versus **53.2%** for non-members (`n=141`).
+            - Registrations made 8–14 days early recorded **73.4% attendance** (`n=188`) versus **48.6%** for registrations made 1–3 days early (`n=72`).
+
+            These are descriptive associations with bootstrap uncertainty, not evidence that changing an event or registration field will cause the observed difference.
             """
         ),
         code(

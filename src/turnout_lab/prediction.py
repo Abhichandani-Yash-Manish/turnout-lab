@@ -15,6 +15,7 @@ from turnout_lab.config import CATEGORICAL_COLUMNS, NUMERIC_COLUMNS, RAW_FEATURE
 from turnout_lab.features import normalize_category
 from turnout_lab.schemas import (
     AttendanceInput,
+    BatchPredictionSummary,
     PredictionResult,
     PredictionStatus,
     Reliability,
@@ -198,6 +199,40 @@ class AttendancePredictor:
         if any(output is None for output in outputs):
             raise RuntimeError("Batch output assembly is incomplete.")
         return pd.DataFrame(outputs).sort_values("input_row").reset_index(drop=True)
+
+
+def summarize_batch(outputs: pd.DataFrame, model_version: str) -> BatchPredictionSummary:
+    """Summarize valid batch probabilities without retaining identities or raw inputs."""
+    required = {
+        "status",
+        "attendance_probability",
+        "no_show_probability",
+        "no_show_risk_band",
+    }
+    missing = sorted(required - set(outputs.columns))
+    if missing:
+        raise ValueError(f"Cannot summarize batch; missing columns: {', '.join(missing)}")
+
+    valid_mask = outputs["status"].isin(
+        [PredictionStatus.SCORED.value, PredictionStatus.REVIEW_REQUIRED.value]
+    )
+    valid = outputs.loc[valid_mask]
+    scored_rows = int(outputs["status"].eq(PredictionStatus.SCORED.value).sum())
+    review_rows = int(
+        outputs["status"].eq(PredictionStatus.REVIEW_REQUIRED.value).sum()
+    )
+    rejected_rows = int(outputs["status"].eq(PredictionStatus.REJECTED.value).sum())
+    return BatchPredictionSummary(
+        total_rows=int(len(outputs)),
+        valid_rows=int(valid_mask.sum()),
+        scored_rows=scored_rows,
+        rejected_rows=rejected_rows,
+        review_required_rows=review_rows,
+        expected_attendees=float(valid["attendance_probability"].sum()),
+        expected_no_shows=float(valid["no_show_probability"].sum()),
+        high_risk_count=int(valid["no_show_risk_band"].eq(RiskBand.HIGH.value).sum()),
+        model_version=model_version,
+    )
 
 
 def serialize_prediction(result: PredictionResult) -> str:

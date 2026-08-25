@@ -7,7 +7,7 @@ import pytest
 from pydantic import ValidationError
 
 from turnout_lab.config import METRICS_PATH, MODEL_PATH, TEST_PATH
-from turnout_lab.prediction import AttendancePredictor
+from turnout_lab.prediction import AttendancePredictor, summarize_batch
 from turnout_lab.schemas import AttendanceInput
 
 
@@ -77,6 +77,24 @@ def test_official_test_scores_exactly_100_rows(predictor: AttendancePredictor) -
     assert outputs["attendance_probability"].between(0, 1).all()
 
 
+def test_batch_summary_reconciles_and_excludes_rejected_rows(
+    predictor: AttendancePredictor,
+) -> None:
+    official = pd.read_csv(TEST_PATH).head(2)
+    invalid = official.iloc[[0]].copy()
+    invalid["previous_events_registered"] = 1
+    invalid["previous_events_attended"] = 2
+    outputs = predictor.score_dataframe(pd.concat([official, invalid], ignore_index=True))
+
+    summary = summarize_batch(outputs, predictor.bundle["model_version"])
+    assert summary.total_rows == 3
+    assert summary.valid_rows == 2
+    assert summary.scored_rows == 2
+    assert summary.rejected_rows == 1
+    assert summary.expected_attendees + summary.expected_no_shows == pytest.approx(2)
+    assert summary.high_risk_count <= summary.valid_rows
+
+
 def test_committed_metrics_are_from_full_protocol() -> None:
     metrics = json.loads(METRICS_PATH.read_text(encoding="utf-8"))
     assert metrics["generated_from_quick_run"] is False
@@ -84,4 +102,11 @@ def test_committed_metrics_are_from_full_protocol() -> None:
     assert metrics["calibrated_champion"]["summary"]["folds"] == 25
     assert metrics["calibrated_champion"]["summary"]["roc_auc"]["mean"] > 0.60
     assert metrics["calibrated_champion"]["summary"]["brier_skill"]["mean"] > 0
-
+    diagnostics = metrics["decision_diagnostics"]
+    assert diagnostics["class_order"] == ["no_show", "attended"]
+    assert diagnostics["outer_seeds"] == [11, 22, 33, 44, 55]
+    assert diagnostics["repeated_oof_predictions"] == 397 * 5
+    assert all(
+        sum(row) == pytest.approx(1)
+        for row in diagnostics["normalized_confusion_matrix"]
+    )

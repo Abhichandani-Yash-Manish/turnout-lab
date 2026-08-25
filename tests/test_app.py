@@ -6,4 +6,19 @@ def test_streamlit_dashboard_starts_without_exceptions() -> None:
     assert not app.exception
     assert app.title or app.markdown
     assert len(app.tabs) == 5
+    assert any("Decision diagnostics" in block.value for block in app.markdown)
 
+
+def test_official_batch_flow_shows_reconciled_expected_totals() -> None:
+    app = AppTest.from_file("app.py").run(timeout=45)
+    next(button for button in app.button if button.label == "Use official 100-row test snapshot").click()
+    app.run(timeout=45)
+    next(button for button in app.button if button.label == "Score loaded rows").click()
+    app.run(timeout=45)
+
+    assert not app.exception
+    metrics = {metric.label: metric.value for metric in app.metric}
+    assert metrics["Valid registrations"] == "100"
+    assert float(metrics["Expected attendees"]) + float(metrics["Expected no-shows"]) == 100
+    assert metrics["Rejected"] == "0"
+    assert len(app.dataframe) == 1

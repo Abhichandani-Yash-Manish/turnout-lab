@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from enum import Enum
 from typing import Any
 
@@ -70,3 +71,34 @@ class PredictionResult(BaseModel):
     reason_codes: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     model_version: str
+
+
+class BatchPredictionSummary(BaseModel):
+    """Aggregate, identity-free planning summary for a scored registration batch."""
+
+    total_rows: int = Field(ge=0)
+    valid_rows: int = Field(ge=0)
+    scored_rows: int = Field(ge=0)
+    rejected_rows: int = Field(ge=0)
+    review_required_rows: int = Field(ge=0)
+    expected_attendees: float = Field(ge=0)
+    expected_no_shows: float = Field(ge=0)
+    high_risk_count: int = Field(ge=0)
+    model_version: str
+
+    @model_validator(mode="after")
+    def validate_reconciliation(self) -> BatchPredictionSummary:
+        if self.valid_rows != self.scored_rows + self.review_required_rows:
+            raise ValueError("Valid rows must equal scored plus review-required rows.")
+        if self.total_rows != self.valid_rows + self.rejected_rows:
+            raise ValueError("Total rows must equal valid plus rejected rows.")
+        if self.high_risk_count > self.valid_rows:
+            raise ValueError("High-risk rows cannot exceed valid rows.")
+        if not math.isclose(
+            self.expected_attendees + self.expected_no_shows,
+            self.valid_rows,
+            rel_tol=0,
+            abs_tol=1e-6,
+        ):
+            raise ValueError("Expected attendees and no-shows must reconcile to valid rows.")
+        return self

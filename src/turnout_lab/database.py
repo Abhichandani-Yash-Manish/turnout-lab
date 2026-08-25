@@ -10,7 +10,7 @@ from typing import Any
 
 import pandas as pd
 
-from turnout_lab.schemas import PredictionResult
+from turnout_lab.schemas import BatchPredictionSummary, PredictionResult
 
 
 def connect(path: Path) -> sqlite3.Connection:
@@ -72,7 +72,21 @@ def log_prediction(path: Path, result: PredictionResult, source: str = "single")
         )
 
 
-def log_batch(path: Path, model_version: str, summary: dict[str, int]) -> None:
+def log_batch(
+    path: Path,
+    model_version: str,
+    summary: BatchPredictionSummary | dict[str, int],
+) -> None:
+    if isinstance(summary, BatchPredictionSummary):
+        row_count = summary.total_rows
+        scored_count = summary.valid_rows
+        rejected_count = summary.rejected_rows
+        review_count = summary.review_required_rows
+    else:
+        row_count = summary["row_count"]
+        scored_count = summary["scored_count"]
+        rejected_count = summary["rejected_count"]
+        review_count = summary["review_count"]
     initialize(path)
     with connect(path) as connection:
         connection.execute(
@@ -84,10 +98,10 @@ def log_batch(path: Path, model_version: str, summary: dict[str, int]) -> None:
             (
                 datetime.now(timezone.utc).isoformat(),
                 model_version,
-                summary["row_count"],
-                summary["scored_count"],
-                summary["rejected_count"],
-                summary["review_count"],
+                row_count,
+                scored_count,
+                rejected_count,
+                review_count,
             ),
         )
 
