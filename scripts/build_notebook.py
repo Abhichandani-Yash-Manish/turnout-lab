@@ -254,6 +254,10 @@ def main() -> None:
             3. **Probability is not reliability.** Calibration, input-contract checks, and out-of-distribution warnings are surfaced separately in the app.
             4. **Use the output supportively.** Send reminders, plan capacity, or investigate patterns. Do not deny registrations or penalize students based on a score.
 
+            Everything in this notebook is measured on the leakage-safe cohort. The shipped model is
+            afterwards refit on all labelled rows for prediction only; model family, threshold, and risk
+            bands are frozen beforehand, so that refit changes none of the numbers above.
+
             The absence of event identifiers, timestamps, demographics, and a genuinely independent test set limits both generalization claims and fairness analysis.
             """
         ),

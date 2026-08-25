@@ -6,8 +6,9 @@ Turnout Lab uses a sigmoid-calibrated random forest trained on eight registratio
 
 - Model family: random forest
 - Feature set: normalized raw inputs
-- Development rows: 397
+- Evaluation rows (leakage-safe cohort): 397
 - Connected validation groups: 396
+- Shipped-model training rows (refit): 496
 - Target: attended (`1`) versus no-show (`0`)
 - Classification threshold: 0.590
 - Model version: `turnout-lab-0.1.0`
