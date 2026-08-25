@@ -104,10 +104,14 @@ class AttendancePredictor:
             deltas.append((abs(delta), message))
         return [message for _, message in sorted(deltas, reverse=True)[:3]]
 
-    def predict(self, attendance_input: AttendanceInput) -> PredictionResult:
+    def _build_result(
+        self,
+        attendance_input: AttendanceInput,
+        frame: pd.DataFrame,
+        probability: float,
+        include_reasons: bool,
+    ) -> PredictionResult:
         features = attendance_input.feature_dict()
-        frame = pd.DataFrame([features], columns=RAW_FEATURE_COLUMNS)
-        probability = float(self.model.predict_proba(frame)[:, 1][0])
         no_show = 1 - probability
         threshold = float(self.bundle["decision_threshold"])
         risk_thresholds = self.bundle["risk_thresholds"]
@@ -126,33 +130,34 @@ class AttendancePredictor:
             decision_threshold=threshold,
             no_show_risk_band=risk_band,
             reliability=reliability,
-            reason_codes=self._reason_codes(frame, probability),
+            reason_codes=self._reason_codes(frame, probability) if include_reasons else [],
             warnings=warnings,
             model_version=self.bundle["model_version"],
         )
+
+    def predict(self, attendance_input: AttendanceInput) -> PredictionResult:
+        features = attendance_input.feature_dict()
+        frame = pd.DataFrame([features], columns=RAW_FEATURE_COLUMNS)
+        probability = float(self.model.predict_proba(frame)[:, 1][0])
+        return self._build_result(attendance_input, frame, probability, include_reasons=True)
 
     def score_dataframe(self, frame: pd.DataFrame) -> pd.DataFrame:
         missing_columns = [column for column in RAW_FEATURE_COLUMNS if column not in frame.columns]
         if missing_columns:
             raise ValueError(f"Missing required columns: {', '.join(missing_columns)}")
-        outputs: list[dict[str, Any]] = []
+        outputs: list[dict[str, Any] | None] = [None] * len(frame)
+        valid_inputs: list[AttendanceInput] = []
+        valid_positions: list[int] = []
         for input_row, (_, row) in enumerate(frame.iterrows()):
             raw = {column: row.get(column) for column in RAW_FEATURE_COLUMNS}
             raw["student_id"] = None if "student_id" not in frame else str(row.get("student_id"))
             raw = {key: (None if pd.isna(value) else value) for key, value in raw.items()}
             try:
                 validated = AttendanceInput.model_validate(raw)
-                result = self.predict(validated)
-                output = {
-                    "input_row": input_row,
-                    "student_id": validated.student_id,
-                    **result.model_dump(mode="json"),
-                    "reason_codes": "; ".join(result.reason_codes),
-                    "warnings": "; ".join(result.warnings),
-                    "error": "",
-                }
+                valid_inputs.append(validated)
+                valid_positions.append(input_row)
             except ValidationError as error:
-                output = {
+                outputs[input_row] = {
                     "input_row": input_row,
                     "student_id": raw.get("student_id"),
                     "status": PredictionStatus.REJECTED.value,
@@ -167,7 +172,31 @@ class AttendancePredictor:
                     "model_version": self.bundle["model_version"],
                     "error": error.errors()[0]["msg"],
                 }
-            outputs.append(output)
+
+        if valid_inputs:
+            valid_frame = pd.DataFrame(
+                [attendance_input.feature_dict() for attendance_input in valid_inputs],
+                columns=RAW_FEATURE_COLUMNS,
+            )
+            probabilities = self.model.predict_proba(valid_frame)[:, 1]
+            for local_index, (position, validated, probability) in enumerate(
+                zip(valid_positions, valid_inputs, probabilities, strict=True)
+            ):
+                one_row = valid_frame.iloc[[local_index]].copy()
+                result = self._build_result(
+                    validated, one_row, float(probability), include_reasons=False
+                )
+                outputs[position] = {
+                    "input_row": position,
+                    "student_id": validated.student_id,
+                    **result.model_dump(mode="json"),
+                    "reason_codes": "",
+                    "warnings": "; ".join(result.warnings),
+                    "error": "",
+                }
+
+        if any(output is None for output in outputs):
+            raise RuntimeError("Batch output assembly is incomplete.")
         return pd.DataFrame(outputs).sort_values("input_row").reset_index(drop=True)
 
 

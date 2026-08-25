@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
+
 from turnout_lab.schemas import PredictionResult
 
 
@@ -87,6 +89,37 @@ def log_batch(path: Path, model_version: str, summary: dict[str, int]) -> None:
                 summary["rejected_count"],
                 summary["review_count"],
             ),
+        )
+
+
+def log_batch_predictions(path: Path, outputs: pd.DataFrame) -> None:
+    """Persist anonymous batch scores without student IDs or raw features."""
+    initialize(path)
+    valid = outputs.loc[outputs["status"].isin(["scored", "review_required"])].copy()
+    if valid.empty:
+        return
+    created_at = datetime.now(timezone.utc).isoformat()
+    records = [
+        (
+            created_at,
+            "batch",
+            str(row.model_version),
+            float(row.attendance_probability),
+            str(row.no_show_risk_band),
+            str(row.reliability),
+            json.dumps([] if pd.isna(row.warnings) or not row.warnings else str(row.warnings).split("; ")),
+        )
+        for row in valid.itertuples(index=False)
+    ]
+    with connect(path) as connection:
+        connection.executemany(
+            """
+            INSERT INTO prediction_logs (
+                created_at, source, model_version, attendance_probability,
+                no_show_risk_band, reliability, warning_codes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            records,
         )
 
 
