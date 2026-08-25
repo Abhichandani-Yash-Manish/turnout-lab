@@ -12,10 +12,6 @@ license = { text = "MIT" }
 authors = [{ name = "Yash Abhichandani" }]
 dependencies = [
   "joblib==1.5.2",
-  "jupyter==1.1.1",
-  "matplotlib==3.10.6",
-  "nbclient==0.10.2",
-  "nbformat==5.10.4",
   "numpy==1.26.4",
   "pandas==2.3.3",
   "plotly==6.3.1",
@@ -25,6 +21,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+notebook = [
+  "jupyter==1.1.1",
+  "matplotlib==3.10.6",
+  "nbclient==0.10.2",
+  "nbformat==5.10.4",
+]
 dev = [
   "pytest==8.4.2",
   "pytest-cov==7.0.0",

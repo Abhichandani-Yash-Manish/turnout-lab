@@ -2877,10 +2877,6 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "joblib" },
-    { name = "jupyter" },
-    { name = "matplotlib" },
-    { name = "nbclient" },
-    { name = "nbformat" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "plotly" },
@@ -2895,14 +2891,20 @@ dev = [
     { name = "pytest-cov" },
     { name = "ruff" },
 ]
+notebook = [
+    { name = "jupyter" },
+    { name = "matplotlib" },
+    { name = "nbclient" },
+    { name = "nbformat" },
+]
 
 [package.metadata]
 requires-dist = [
     { name = "joblib", specifier = "==1.5.2" },
-    { name = "jupyter", specifier = "==1.1.1" },
-    { name = "matplotlib", specifier = "==3.10.6" },
-    { name = "nbclient", specifier = "==0.10.2" },
-    { name = "nbformat", specifier = "==5.10.4" },
+    { name = "jupyter", marker = "extra == 'notebook'", specifier = "==1.1.1" },
+    { name = "matplotlib", marker = "extra == 'notebook'", specifier = "==3.10.6" },
+    { name = "nbclient", marker = "extra == 'notebook'", specifier = "==0.10.2" },
+    { name = "nbformat", marker = "extra == 'notebook'", specifier = "==5.10.4" },
     { name = "numpy", specifier = "==1.26.4" },
     { name = "pandas", specifier = "==2.3.3" },
     { name = "plotly", specifier = "==6.3.1" },
@@ -2913,7 +2915,7 @@ requires-dist = [
     { name = "scikit-learn", specifier = "==1.7.2" },
     { name = "streamlit", specifier = "==1.50.0" },
 ]
-provides-extras = ["dev"]
+provides-extras = ["notebook", "dev"]
 
 [[package]]
 name = "typing-extensions"
